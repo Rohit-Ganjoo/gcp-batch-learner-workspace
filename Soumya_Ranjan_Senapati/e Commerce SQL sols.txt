@@ -1,0 +1,70 @@
+e Commerce SQL sols:
+
+1. Retrieve name, category, price, and stock quantity for low-stock products, sorted by stock ascending.
+ANS:
+SELECT
+    name,
+    category,
+    price,
+    stock_quantity
+FROM products
+WHERE stock_quantity<10
+ORDER BY stock_quantity 
+
+2. For each payment method, calculate total revenue from delivered orders only.
+ANS:
+SELECT
+     o.payment_method,
+     ROUND(SUM((oi.quantity*1.0 * p.price*1.0)*(1-(oi.discount_pct*1.0/100.0))), 2) AS total_revenue 
+FROM
+    orders o LEFT JOIN order_items oi ON o.order_id = oi.order_id 
+    LEFT JOIN products p ON oi.product_id = p.product_id
+WHERE
+    o.status = 'Delivered'
+GROUP BY
+    o.payment_method;
+
+3. Show qualifying customer name, city, account type, and total orders placed.
+ANS:
+SELECT
+    c.full_name,
+    c.city,
+    c.account_type,
+    COUNT(o.order_id) AS total_orders
+FROM
+    orders o LEFT JOIN customers c ON o.customer_id = c.customer_id
+GROUP BY
+    o.customer_id HAVING COUNT(o.customer_id) > 1;
+
+4. For each product, show name, category, revenue, category rank, and percent of category total rounded to 2 decimals.
+ANS:
+WITH temp AS (
+SELECT
+    p.name AS name,
+    p.category AS category,
+    SUM((oi.quantity*1.0 * p.price*1.0) * (1-(oi.discount_pct*1.0/100.0))) AS revenue
+FROM 
+    orders o
+    LEFT JOIN order_items oi
+    ON o.order_id = oi.order_id
+    LEFT JOIN products p
+    ON oi.product_id = p.product_id
+WHERE
+    o.status = 'Delivered'
+GROUP BY
+    p.name
+)
+SELECT
+    name,
+    category,
+    revenue,
+    RANK() OVER(PARTITION BY category ORDER BY revenue DESC) AS category_rank,
+    ROUND(revenue*100.0 / SUM(revenue) OVER(PARTITION BY category), 2) AS perct_of_category_total
+FROM
+    temp;
+    
+
+
+
+
+    

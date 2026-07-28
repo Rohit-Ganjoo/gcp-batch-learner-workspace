@@ -1,0 +1,32 @@
+######## Q1
+
+SELECT title, release_year
+FROM movies
+WHERE language = 'English' AND release_year > 2020
+ORDER BY release_year DESC;
+
+######## Q2
+SELECT m.genre, SUM(b.collection_cr) AS total_collection, AVG(r.rating) AS average_rating
+FROM movies AS m
+INNER JOIN box_office AS b
+ON m.movie_id = b.movie_id
+INNER JOIN reviews AS r 
+ON m.movie_id = r.movie_id
+GROUP BY m.genre;
+
+######## Q3
+SELECT d.full_name, COUNT(m.movie_id) AS no_of_movies, SUM(b.collection_cr) AS total_collection
+FROM movies AS m
+INNER JOIN directors as d
+ON m.director_id=d.director_id
+INNER JOIN box_office AS b
+ON m.movie_id=b.movie_id
+GROUP BY d.full_name
+HAVING COUNT(m.movie_id)>1;
+
+######## Q4
+SELECT m.title, m.genre, b.collection_cr, RANK() OVER (PARTITION BY m.genre ORDER BY b.collection_cr DESC) AS genre_rank, 
+ROUND(b.collection_cr*100/SUM(b.collection_cr)OVER (PARTITION BY m.genre), 2) AS percentage_of_genre
+FROM movies AS m
+INNER JOIN box_office AS b
+ON m.movie_id=b.movie_id;

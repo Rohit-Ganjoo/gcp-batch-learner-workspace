@@ -1,0 +1,49 @@
+SELECT el.state,el.city,Round(sum(et.Sales_Amount),2) as 'total_Sales' from ex_locations el 
+    join ex_customers ec on el.postal_code=ec.postal_code
+    join ex_orders eo on ec.customer_id=eo.customer_id
+    join ex_transactions et on eo.order_id=et.order_id
+    GROUP by  el.state,el.city;
+
+
+
+WITH a as (
+    SELECT el.state,el.city,Round(sum(et.Sales_Amount),2) as 'Total_Sales' from ex_locations el 
+    join ex_customers ec on el.postal_code=ec.postal_code
+    join ex_orders eo on ec.customer_id=eo.customer_id
+    join ex_transactions et on eo.order_id=et.order_id
+    GROUP by  el.state,el.city
+
+)
+SELECT  state as 'State',city as 'City',Total_Sales as 'Total Sales',Rank() over(Partition by state ORDER BY Total_Sales DESC) as 'Rank' from a;
+
+
+
+
+WITH a AS (
+    SELECT 
+        el.state,
+        el.city,
+        ROUND(SUM(et.Sales_Amount), 2) AS Total_Sales 
+    FROM ex_locations el 
+    JOIN ex_customers ec ON el.postal_code = ec.postal_code
+    JOIN ex_orders eo ON ec.customer_id = eo.customer_id
+    JOIN ex_transactions et ON eo.order_id = et.order_id
+    GROUP BY el.state, el.city
+),
+RankedCities AS (
+    SELECT 
+        state, 
+        city, 
+        RANK() OVER(PARTITION BY state ORDER BY Total_Sales DESC) AS City_Rank
+    FROM a
+)
+SELECT 
+    state AS State,
+    [1] AS 'Rank 1',
+    [2] AS 'Rank 2',
+    [3] AS 'Rank 3'
+FROM RankedCities
+PIVOT (
+    MAX(city)
+    FOR City_Rank IN ([1], [2], [3])
+) AS PivotTable;

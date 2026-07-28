@@ -1,0 +1,49 @@
+27/07/2026 - e-commerce module
+ 
+--  Retrieve name, category, price, and stock quantity for low-stock products, sorted by stock ascending.
+ 
+SQL
+ 
+select name, category, price, stock_quantity from products
+where stock_quantity in(
+select stock_quantity from products
+where stock_quantity < 10 
+)
+order by stock_quantity
+ 
+ 
+--  For each payment method, calculate total revenue from delivered orders only.
+ 
+SQL
+ 
+select payment_method , sum(price - discount_pct*price/100.0)*quantity as total_rev
+from orders o 
+left join order_items oi on o.order_id = oi.order_id
+left join products p on p.product_id = oi.product_id
+where status = 'Delivered'
+group by payment_method
+ 
+ 
+--  Show qualifying customer name, city, account type, and total orders placed.
+ 
+SQL
+ 
+select full_name, city, account_type, count(*) as tot_orders_placed
+from orders o
+left join customers c on c.customer_id = o.customer_id
+group by full_name
+having count(*) > 1
+ 
+ 
+--  For each product, show name, category, revenue, category rank, and percent of category total rounded to 2 decimals.
+ 
+SQL
+ 
+select name, category, sum(price - discount_pct*price/100.0)*quantity as total_rev, 
+rank() over (partition by category ORDER BY SUM((price - discount_pct * price / 100.0) * quantity) DESC ) as rnk , 
+sum(price - discount_pct*price/100.0)*quantity*100.0 / sum(sum(price - discount_pct*price/100.0)*quantity) over (partition by category) as percent
+from products p
+left join order_items oi on oi.product_id = p.product_id
+left join orders o on o.order_id = oi.order_id
+group by name, category
+ 

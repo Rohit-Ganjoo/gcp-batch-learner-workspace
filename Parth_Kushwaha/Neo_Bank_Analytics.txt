@@ -1,0 +1,53 @@
+QUESTION 1:
+
+select full_name,
+age
+from customers
+where 
+segment = "Premium" 
+and 
+city = "Mumbai"
+
+
+QUESTION 2:
+
+select a.account_type,
+sum(case when t.txn_type = 'Credit' then t.amount else 0 end)
+as
+Total_amount_credited, 
+sum(case when t.txn_type = 'Debit' then t.amount else 0 end)
+as Total_amount_debited
+from 
+accounts as a 
+join transactions as t 
+on a.account_id = t.account_id
+group by a.account_type
+
+
+QUESTION 3:
+
+select c.full_name,
+count(*) as accounts_hold,
+sum(a.balance) as total_balance
+from customers as c 
+inner join accounts as a 
+on a.customer_id = c.customer_id
+group by c.full_name having count(*) > 1
+
+
+QUESTION 4:
+
+with cte as 
+(select full_name, city, sum(a.balance) as total_balance,
+rank() over(partition by city order by sum(a.balance) desc)
+as ranking 
+from customers as c 
+join accounts as a 
+on c.customer_id = a.customer_id 
+group by full_name, city 
+)
+
+select full_name ,city, total_balance, ranking, round(total_balance*100/sum(total_balance) 
+over(partition by city),2) as percentage_needed 
+from cte
+order by city, ranking

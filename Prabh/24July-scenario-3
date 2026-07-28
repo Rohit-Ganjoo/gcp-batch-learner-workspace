@@ -1,0 +1,96 @@
+1. For the detractors we need more detailed analysis. For now, cashbacks/offers on more popular items in this group can be implemented to test the phase. Also we can introduce combo offers to introduce new items for Detractors that they can buy from GlobalMart in future.
+
+2. For Potentials and promotors, we need an exclusive rewards program that will reward promoters heavily and convert promoters to potentials.
+
+WITH delivered_orders AS (
+ -- 1. Filter only delivered orders and aggregate transactions to the order level
+ SELECT
+ o.customer_id,
+ o.order_id,
+ o.order_purchase_date,
+ SUM(t.sales_amount) AS order_sales,
+ SUM(t.quantity) AS order_quantity
+ FROM dbo.ex_orders o
+ JOIN dbo.ex_transactions t ON o.order_id = t.order_id
+ WHERE o.order_status = 'delivered'
+ GROUP BY o.customer_id, o.order_id, o.order_purchase_date
+ ),
+ returned_orders AS (
+ -- 2. Get distinct count of returned delivered orders
+ SELECT
+ o.customer_id,
+ COUNT(DISTINCT r.order_id) AS tot_returns
+ FROM dbo.ex_orders o
+ JOIN dbo.ex_returns r ON o.order_id = r.order_id
+ WHERE o.order_status = 'delivered'
+ GROUP BY o.customer_id
+ ),
+ customer_summary AS (
+ -- 3. Compute base aggregations per customer
+ SELECT
+ c.customer_id,
+ c.customer_name,
+ COUNT(d.order_id) AS tot_orders,
+ COALESCE(r.tot_returns, 0) AS tot_returns,
+ SUM(d.order_sales) AS total_order_value,
+
+ -- Basket size: Total units / Total baskets (orders) -> rounded down using FLOOR
+ FLOOR(SUM(d.order_quantity)::numeric / COUNT(d.order_id)) AS avg_basket_size,
+
+ -- Basket value: Total value / Total orders
+ ROUND((SUM(d.order_sales) / COUNT(d.order_id))::numeric, 2) AS avg_basket_value,
+
+ -- Days active in the system
+ (MAX(d.order_purchase_date)::date - MIN(d.order_purchase_date)::date) AS length_of_stay_days,
+
+ -- Order Purchase Frequency: Average days taken between orders (rounded to nearest integer)
+ CASE
+ WHEN COUNT(d.order_id) > 1
+ THEN ROUND((MAX(d.order_purchase_date)::date - MIN(d.order_purchase_date)::date)::numeric / (COUNT(d.order_id) - 1))
+ ELSE 0
+ END AS order_purchase_frequency,
+
+ -- Recency: Days since last order as of 2018-09-01
+ ('2018-09-01'::date - MAX(d.order_purchase_date)::date) AS recency_days
+
+ FROM dbo.ex_customers c
+ JOIN delivered_orders d ON c.customer_id = d.customer_id
+ LEFT JOIN returned_orders r ON c.customer_id = r.customer_id
+ GROUP BY c.customer_id, c.customer_name, r.tot_returns
+ )
+ -- 4. Apply business rule thresholds for RFM segmentation
+ SELECT
+ customer_name,
+ tot_orders,
+ tot_returns,
+ total_order_value,
+ avg_basket_size,
+ avg_basket_value,
+ length_of_stay_days,
+ order_purchase_frequency,
+ recency_days,
+
+ -- Recency Segment
+ CASE
+ WHEN recency_days <= 18 THEN 'High'
+ WHEN recency_days BETWEEN 19 AND 31 THEN 'Medium'
+ ELSE 'Low'
+ END AS recency_segment,
+
+ -- Frequency Segment (Lower days = more frequent purchaser)
+ CASE
+ WHEN order_purchase_frequency <= 30 THEN 'High'
+ WHEN order_purchase_frequency BETWEEN 31 AND 38 THEN 'Medium'
+ ELSE 'Low'
+ END AS frequency_segment,
+
+ -- Monetary Segment
+ CASE
+ WHEN total_order_value > 6900 THEN 'High'
+ WHEN total_order_value BETWEEN 4300 AND 6900 THEN 'Medium'
+ ELSE 'Low'
+ END AS monetary_segment
+
+ FROM customer_summary
+ ORDER BY total_order_value DESC;
+Aa

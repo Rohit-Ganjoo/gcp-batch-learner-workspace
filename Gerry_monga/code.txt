@@ -1,0 +1,64 @@
+1.
+SELECT full_name,
+       age
+FROM customers
+WHERE city = 'Mumbai'
+  AND segment = 'Premium';
+
+
+2.
+SELECT
+    a.account_type,
+    SUM(CASE
+            WHEN t.txn_type = 'Credit' THEN t.amount
+            ELSE 0
+        END) AS total_credited,
+    SUM(CASE
+            WHEN t.txn_type = 'Debit' THEN t.amount
+            ELSE 0
+        END) AS total_debited
+FROM accounts a
+JOIN transactions t
+    ON a.account_id = t.account_id
+GROUP BY a.account_type;
+
+3.
+SELECT
+    c.full_name,
+    COUNT(a.account_id) AS account_count,
+    SUM(a.balance) AS total_balance
+FROM customers c
+JOIN accounts a
+    ON c.customer_id = a.customer_id
+GROUP BY c.customer_id, c.full_name
+HAVING COUNT(a.account_id) > 1
+ORDER BY total_balance DESC;
+
+4.
+WITH customer_balances AS (
+    SELECT
+        c.customer_id,
+        c.full_name,
+        c.city,
+        SUM(a.balance) AS total_balance
+    FROM customers c
+    JOIN accounts a
+        ON c.customer_id = a.customer_id
+    GROUP BY c.customer_id, c.full_name, c.city
+)
+
+SELECT
+    full_name,
+    city,
+    total_balance,
+    RANK() OVER (
+        PARTITION BY city
+        ORDER BY total_balance DESC
+    ) AS rank,
+    ROUND(
+        total_balance * 100.0 /
+        SUM(total_balance) OVER (PARTITION BY city),
+        2
+    ) AS city_deposit_percentage
+FROM customer_balances
+ORDER BY city, rank;

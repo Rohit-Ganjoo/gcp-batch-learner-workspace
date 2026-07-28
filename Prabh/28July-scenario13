@@ -1,0 +1,42 @@
+TASK 1
+SELECT region,state,city,
+sum(sales_amount) as sales_total
+FROM ex_customers c join ex_orders o 
+	ON c.customer_id=o.customer_id AND o.order_status='delivered'
+	JOIN ex_transactions t 
+	ON t.Order_ID=o.order_id
+	JOIN ex_locations l
+	ON l.postal_code=c.postal_code
+GROUP BY ROLLUP(region,state,city);
+
+TASK 2
+SELECT region,state,city,
+sum(sales_amount) as sales_total
+FROM ex_customers c join ex_orders o 
+	ON c.customer_id=o.customer_id AND o.order_status='delivered'
+	JOIN ex_transactions t 
+	ON t.Order_ID=o.order_id
+	JOIN ex_locations l
+	ON l.postal_code=c.postal_code
+GROUP BY CUBE(city,state,region);
+
+TASK 3
+SELECT region,state,city,
+sum(sales_amount) as sales_total
+FROM ex_customers c join ex_orders o 
+	ON c.customer_id=o.customer_id AND o.order_status='delivered'
+	JOIN ex_transactions t 
+	ON t.Order_ID=o.order_id
+	JOIN ex_locations l
+	ON l.postal_code=c.postal_code
+GROUP BY grouping sets((region,state,city),(region,state),(region),());
+
+TASK 4
+When we want to uncover hidden patterns in the data and do exploratory analysis
+Rollup is used when there is a clear hierarchy in the data and we want hierarchical aggregations.
+
+TASK 5
+In cube if there are k columns to group by, 2^k grouping sets are made. It generates all possible combinations of grouping columns.
+
+Grouping sets gives us absolute control over which subsets of grouping columns we want.
+It avoids calculating unneeded subtotals, which saves heavy database engine resources compared to a full cube.
