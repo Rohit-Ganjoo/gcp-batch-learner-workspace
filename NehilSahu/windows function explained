@@ -1,0 +1,46 @@
+-- Report: Month-on-Month % change in total sales value
+-- Exclude year 2016 | Join orders + transactions | Use LAG() | Handle NULL with NULLIF()
+
+
+WITH base_data AS (
+    SELECT
+        o.order_id,
+        DATENAME(MONTH, o.order_purchase_date) AS month_name,
+        MONTH(o.order_purchase_date) AS month_seq,
+        YEAR(o.order_purchase_date) AS order_year,
+        t.sales
+    FROM orders o
+    JOIN transactions t
+        ON o.order_id = t.order_id
+    WHERE YEAR(o.order_purchase_date) <> 2016
+),
+sales_summary AS (
+    SELECT
+        month_name,
+        month_seq,
+        order_year,
+        SUM(sales) AS total_sales
+    FROM base_data
+    GROUP BY month_name, month_seq, order_year
+),
+sales_lag AS (
+    SELECT
+        *,
+        LAG(total_sales) OVER (
+            PARTITION BY order_year
+            ORDER BY month_seq
+        ) AS prev_month_sales
+    FROM sales_summary
+)
+SELECT
+    order_year,
+    month_name,
+    total_sales,
+    prev_month_sales,
+    FORMAT(
+        (total_sales - prev_month_sales) * 1.0 /
+        NULLIF(prev_month_sales, 0),
+        'P2'
+    ) AS MoM_perc_change
+FROM sales_lag
+ORDER BY order_year, month_seq;
