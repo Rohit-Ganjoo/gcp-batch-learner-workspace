@@ -1,0 +1,99 @@
+TASK 1
+--SELECT * from ex_campaign_metrics;
+--Campaign ID	Channel Name	Impressions	Clicks	Conversions
+--SELECT * from ex_campaigns;
+SELECT
+    l.region,
+    c.campaign_id,
+    COUNT(DISTINCT cust.customer_id) AS customers_acquired,
+    SUM(t.sales_amount) AS total_revenue
+FROM ex_campaigns c
+JOIN ex_customers cust
+    ON cust.joining_date BETWEEN c.start_date AND c.end_date
+JOIN ex_locations l
+    ON cust.postal_code = l.postal_code
+JOIN ex_orders o
+    ON cust.customer_id = o.customer_id
+JOIN ex_transactions t
+    ON o.order_id = t.Order_ID
+WHERE CAST(o.order_purchase_date AS DATE)
+      BETWEEN c.start_date AND c.end_date
+GROUP BY
+    l.region,
+    c.campaign_id
+ORDER BY
+    l.region,
+    c.campaign_id;
+WITH base_data AS
+(
+    SELECT
+        l.region,
+        CAST(o.order_purchase_date AS DATE) AS order_date,
+        YEAR(o.order_purchase_date) AS [Year],
+        DATENAME(MONTH, o.order_purchase_date) AS [Month Name],
+        SUM(t.Sales_Amount) AS Sales
+    FROM orders o
+    JOIN ex_customers c
+        ON o.customer_id = c.customer_id
+    JOIN ex_locations l
+        ON c.postal_code = l.postal_code
+    JOIN ex_transactions t
+        ON o.order_id = t.Order_ID
+    GROUP BY
+        l.region,
+        CAST(o.order_purchase_date AS DATE),
+        YEAR(o.order_purchase_date),
+        DATENAME(MONTH, o.order_purchase_date),
+        MONTH(o.order_purchase_date)
+)
+
+SELECT
+    region,
+    order_date AS [Order Date],
+    [Year],
+    [Month Name],
+    Sales,
+    SUM(Sales) OVER (
+        PARTITION BY region, YEAR(order_date), MONTH(order_date)
+        ORDER BY order_date
+    ) AS MTD,
+    SUM(Sales) OVER (
+        PARTITION BY region, YEAR(order_date)
+        ORDER BY order_date
+    ) AS YTD
+FROM base_data
+ORDER BY
+    region,
+    order_date;
+
+TASK 2
+SELECT cm.campaign_id,channel_name,impressions,clicks,conversions
+FROM ex_campaigns cm JOIN ex_channel c
+	ON c.channel_id=cm.channel_id
+	JOIN ex_campaign_metrics cmt 
+	ON cmt.campaign_id=cm.campaign_id;
+
+
+TASK 3
+SELECT
+    l.region,
+    c.campaign_id,
+    COUNT(DISTINCT cust.customer_id) AS customers_acquired,
+    SUM(t.sales) AS total_revenue
+FROM ex_campaigns c
+JOIN ex_customers cust
+    ON cust.joining_date BETWEEN c.start_date AND c.end_date
+JOIN ex_locations l
+    ON cust.postal_code = l.postal_code
+JOIN ex_orders o
+    ON cust.customer_id = o.customer_id
+JOIN transactions t
+    ON o.order_id = t.Order_ID
+WHERE CAST(o.order_purchase_date AS DATE)
+      BETWEEN c.start_date AND c.end_date
+GROUP BY
+    l.region,
+    c.campaign_id
+ORDER BY
+    l.region,
+    c.campaign_id;
