@@ -1,0 +1,94 @@
+WITH customer_metrics AS (
+    SELECT
+        c.customer_name,
+
+        COUNT(DISTINCT o.order_id) AS tot_orders,
+
+        SUM(t.sales_amount * t.quantity) AS total_order_value,
+
+        FLOOR(
+            SUM(t.quantity) * 1.0
+            / COUNT(DISTINCT o.order_id)
+        ) AS avg_basket_size,
+
+        ROUND(
+            SUM(t.sales_amount * t.quantity) * 1.0
+            / COUNT(DISTINCT o.order_id),
+            2
+        ) AS avg_basket_value,
+
+        DATEDIFF(
+            DAY,
+            MIN(o.order_date),
+            MAX(o.order_date)
+        ) AS length_of_stay_days,
+
+        ROUND(
+            DATEDIFF(
+                DAY,
+                MIN(o.order_date),
+                MAX(o.order_date)
+            ) * 1.0
+            / NULLIF(COUNT(DISTINCT o.order_id) - 1, 0),
+            0
+        ) AS order_purchase_frequency,
+
+        DATEDIFF(
+            DAY,
+            MAX(o.order_date),
+            '2018-09-01'
+        ) AS recency_days
+
+    FROM dbo.ex_customers c
+    JOIN dbo.ex_orders o
+        ON c.customer_id = o.customer_id
+    JOIN dbo.ex_transactions t
+        ON o.order_id = t.order_id
+    WHERE o.order_status = 'Delivered'
+    GROUP BY c.customer_name
+),
+
+customer_returns AS (
+    SELECT
+        c.customer_name,
+        COUNT(*) AS tot_returns
+    FROM dbo.ex_returns r
+    JOIN dbo.ex_orders o
+        ON r.order_id = o.order_id
+    JOIN dbo.ex_customers c
+        ON o.customer_id = c.customer_id
+    GROUP BY c.customer_name
+)
+
+SELECT
+    cm.customer_name,
+    cm.tot_orders,
+    COALESCE(cr.tot_returns, 0) AS tot_returns,
+    cm.total_order_value,
+    cm.avg_basket_size,
+    cm.avg_basket_value,
+    cm.length_of_stay_days,
+    cm.order_purchase_frequency,
+    cm.recency_days,
+
+    CASE
+        WHEN cm.recency_days <= 18 THEN 'High'
+        WHEN cm.recency_days BETWEEN 19 AND 31 THEN 'Medium'
+        ELSE 'Low'
+    END AS recency_segment,
+
+    CASE
+        WHEN cm.order_purchase_frequency <= 30 THEN 'High'
+        WHEN cm.order_purchase_frequency BETWEEN 31 AND 38 THEN 'Medium'
+        ELSE 'Low'
+    END AS frequency_segment,
+
+    CASE
+        WHEN cm.total_order_value > 6900 THEN 'High'
+        WHEN cm.total_order_value BETWEEN 4300 AND 6900 THEN 'Medium'
+        ELSE 'Low'
+    END AS monetary_segment
+
+FROM customer_metrics cm
+LEFT JOIN customer_returns cr
+    ON cm.customer_name = cr.customer_name;
