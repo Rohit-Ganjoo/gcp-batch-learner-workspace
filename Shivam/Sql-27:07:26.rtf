@@ -1,0 +1,71 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2870
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue255;\red255\green255\blue254;\red0\green0\blue0;
+\red184\green0\blue187;\red19\green118\blue70;\red251\green0\blue7;\red100\green117\blue135;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c100000;\cssrgb\c100000\c100000\c99608;\cssrgb\c0\c0\c0;
+\cssrgb\c78039\c0\c78039;\cssrgb\c3529\c52549\c34510;\cssrgb\c100000\c0\c0;\cssrgb\c46667\c53333\c60000;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf2 \cb3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 SELECT\cf0 \strokec4  el.state,el.city,\cf5 \strokec5 Round\cf0 \strokec4 (\cf5 \strokec5 sum\cf0 \strokec4 (et.Sales_Amount),\cf6 \strokec6 2\cf0 \strokec4 ) \cf2 \strokec2 as\cf0 \strokec4  \cf7 \strokec7 'total_Sales'\cf0 \strokec4  \cf2 \strokec2 from\cf0 \strokec4  ex_locations el \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3     \cf8 \strokec8 join\cf0 \strokec4  ex_customers ec \cf2 \strokec2 on\cf0 \strokec4  el.postal_code\cf8 \strokec8 =\cf0 \strokec4 ec.postal_code\cb1 \
+\cb3     \cf8 \strokec8 join\cf0 \strokec4  ex_orders eo \cf2 \strokec2 on\cf0 \strokec4  ec.customer_id\cf8 \strokec8 =\cf0 \strokec4 eo.customer_id\cb1 \
+\cb3     \cf8 \strokec8 join\cf0 \strokec4  ex_transactions et \cf2 \strokec2 on\cf0 \strokec4  eo.order_id\cf8 \strokec8 =\cf0 \strokec4 et.order_id\cb1 \
+\cb3     \cf2 \strokec2 GROUP\cf0 \strokec4  \cf2 \strokec2 by\cf0 \strokec4   el.state,el.city;\cb1 \
+\
+\
+\
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \strokec2 WITH\cf0 \strokec4  a \cf2 \strokec2 as\cf0 \strokec4  (\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3     \cf2 \strokec2 SELECT\cf0 \strokec4  el.state,el.city,\cf5 \strokec5 Round\cf0 \strokec4 (\cf5 \strokec5 sum\cf0 \strokec4 (et.Sales_Amount),\cf6 \strokec6 2\cf0 \strokec4 ) \cf2 \strokec2 as\cf0 \strokec4  \cf7 \strokec7 'Total_Sales'\cf0 \strokec4  \cf2 \strokec2 from\cf0 \strokec4  ex_locations el \cb1 \
+\cb3     \cf8 \strokec8 join\cf0 \strokec4  ex_customers ec \cf2 \strokec2 on\cf0 \strokec4  el.postal_code\cf8 \strokec8 =\cf0 \strokec4 ec.postal_code\cb1 \
+\cb3     \cf8 \strokec8 join\cf0 \strokec4  ex_orders eo \cf2 \strokec2 on\cf0 \strokec4  ec.customer_id\cf8 \strokec8 =\cf0 \strokec4 eo.customer_id\cb1 \
+\cb3     \cf8 \strokec8 join\cf0 \strokec4  ex_transactions et \cf2 \strokec2 on\cf0 \strokec4  eo.order_id\cf8 \strokec8 =\cf0 \strokec4 et.order_id\cb1 \
+\cb3     \cf2 \strokec2 GROUP\cf0 \strokec4  \cf2 \strokec2 by\cf0 \strokec4   el.state,el.city\cb1 \
+\
+\cb3 )\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \strokec2 SELECT\cf0 \strokec4   state \cf2 \strokec2 as\cf0 \strokec4  \cf7 \strokec7 'State'\cf0 \strokec4 ,city \cf2 \strokec2 as\cf0 \strokec4  \cf7 \strokec7 'City'\cf0 \strokec4 ,Total_Sales \cf2 \strokec2 as\cf0 \strokec4  \cf7 \strokec7 'Total Sales'\cf0 \strokec4 ,\cf5 \strokec5 Rank\cf0 \strokec4 () \cf2 \strokec2 over\cf0 \strokec4 (\cf2 \strokec2 Partition\cf0 \strokec4  \cf2 \strokec2 by\cf0 \strokec4  state \cf2 \strokec2 ORDER\cf0 \strokec4  \cf2 \strokec2 BY\cf0 \strokec4  Total_Sales \cf2 \strokec2 DESC\cf0 \strokec4 ) \cf2 \strokec2 as\cf0 \strokec4  \cf7 \strokec7 'Rank'\cf0 \strokec4  \cf2 \strokec2 from\cf0 \strokec4  a;\cb1 \
+\
+\
+\
+\
+\cf2 \cb3 \strokec2 WITH\cf0 \strokec4  a \cf2 \strokec2 AS\cf0 \strokec4  (\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3     \cf2 \strokec2 SELECT\cf0 \strokec4  \cb1 \
+\cb3         el.state,\cb1 \
+\cb3         el.city,\cb1 \
+\cb3         \cf5 \strokec5 ROUND\cf0 \strokec4 (\cf5 \strokec5 SUM\cf0 \strokec4 (et.Sales_Amount), \cf6 \strokec6 2\cf0 \strokec4 ) \cf2 \strokec2 AS\cf0 \strokec4  Total_Sales \cb1 \
+\cb3     \cf2 \strokec2 FROM\cf0 \strokec4  ex_locations el \cb1 \
+\cb3     \cf8 \strokec8 JOIN\cf0 \strokec4  ex_customers ec \cf2 \strokec2 ON\cf0 \strokec4  el.postal_code \cf8 \strokec8 =\cf0 \strokec4  ec.postal_code\cb1 \
+\cb3     \cf8 \strokec8 JOIN\cf0 \strokec4  ex_orders eo \cf2 \strokec2 ON\cf0 \strokec4  ec.customer_id \cf8 \strokec8 =\cf0 \strokec4  eo.customer_id\cb1 \
+\cb3     \cf8 \strokec8 JOIN\cf0 \strokec4  ex_transactions et \cf2 \strokec2 ON\cf0 \strokec4  eo.order_id \cf8 \strokec8 =\cf0 \strokec4  et.order_id\cb1 \
+\cb3     \cf2 \strokec2 GROUP\cf0 \strokec4  \cf2 \strokec2 BY\cf0 \strokec4  el.state, el.city\cb1 \
+\cb3 ),\cb1 \
+\cb3 RankedCities \cf2 \strokec2 AS\cf0 \strokec4  (\cb1 \
+\cb3     \cf2 \strokec2 SELECT\cf0 \strokec4  \cb1 \
+\cb3         state, \cb1 \
+\cb3         city, \cb1 \
+\cb3         \cf5 \strokec5 RANK\cf0 \strokec4 () \cf2 \strokec2 OVER\cf0 \strokec4 (\cf2 \strokec2 PARTITION\cf0 \strokec4  \cf2 \strokec2 BY\cf0 \strokec4  state \cf2 \strokec2 ORDER\cf0 \strokec4  \cf2 \strokec2 BY\cf0 \strokec4  Total_Sales \cf2 \strokec2 DESC\cf0 \strokec4 ) \cf2 \strokec2 AS\cf0 \strokec4  City_Rank\cb1 \
+\cb3     \cf2 \strokec2 FROM\cf0 \strokec4  a\cb1 \
+\cb3 )\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \strokec2 SELECT\cf0 \strokec4  \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3     state \cf2 \strokec2 AS\cf0 \strokec4  State,\cb1 \
+\cb3     [1] \cf2 \strokec2 AS\cf0 \strokec4  \cf7 \strokec7 'Rank 1'\cf0 \strokec4 ,\cb1 \
+\cb3     [2] \cf2 \strokec2 AS\cf0 \strokec4  \cf7 \strokec7 'Rank 2'\cf0 \strokec4 ,\cb1 \
+\cb3     [3] \cf2 \strokec2 AS\cf0 \strokec4  \cf7 \strokec7 'Rank 3'\cf0 \cb1 \strokec4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \strokec2 FROM\cf0 \strokec4  RankedCities\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf8 \cb3 \strokec8 PIVOT\cf0 \strokec4  (\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3     \cf5 \strokec5 MAX\cf0 \strokec4 (city)\cb1 \
+\cb3     \cf2 \strokec2 FOR\cf0 \strokec4  City_Rank \cf8 \strokec8 IN\cf0 \strokec4  ([1], [2], [3])\cb1 \
+\cb3 ) \cf2 \strokec2 AS\cf0 \strokec4  PivotTable;\cb1 \
+}
