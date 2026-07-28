@@ -1,0 +1,33 @@
+###### Q1
+select p.sub_category , sum(t.sales_amount * t.quantity) as total_sales_value  from dbo.ex_products p join dbo.ex_transactions t 
+using(product_id) group by sub_category order by total_sales_value asc limit 1;
+
+
+###### Q2
+select count(*)*100/(select count(*) 
+from dbo.ex_products where sub_category='Accessories')  
+as product_precentage from dbo.ex_products 
+where sub_category='Accessories' 
+and product_photos_qty = 0 or product_photos_qty is NULL;
+
+###### Q3
+select sub_category, count(*) as product_with_no_photo from dbo.ex_products where product_photos_qty = 0 
+or product_photos_qty is NULL group by sub_category order by product_with_no_photo desc limit 1;
+
+
+######  Q4
+
+select sub_category,
+sum(t.sales_amount*t.quantity) 
+as total_sales_amount 
+from dbo.ex_products p join dbo.ex_transactions t 
+using(product_id) where category = 'Technology' 
+group by sub_category order by total_sales_amount desc limit 2;
+
+
+###### Q5
+select sub_category,sum(t.quantity)
+as total_qty from dbo.ex_transactions t 
+join dbo.ex_products p using(product_id) 
+where category='Office Supplies' 
+group by sub_category order by total_qty desc limit 1;
