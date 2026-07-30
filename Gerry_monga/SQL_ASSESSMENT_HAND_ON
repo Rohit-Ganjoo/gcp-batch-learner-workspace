@@ -1,0 +1,67 @@
+1.
+with sub_category_sales as (
+    select p.category,p.sub_category,SUM(t.sales_amount) as sub_cat_sales
+    from ex_orders o
+    join ex_transactions t on o.order_id = t.order_id
+    join ex_products p on t.product_id = p.product_id
+    where o.order_status NOT IN ('canceled', 'unavailable')
+    group by p.category, p.sub_category
+),
+sales_report as (
+    select
+        category,
+        sub_category,
+        sub_cat_sales,
+        ROUND(
+            100.0 * sub_cat_sales /
+            SUM(sub_cat_sales) OVER(PARTITION BY category), 2
+        ) as sales_contribution_to_category
+    from sub_category_sales
+)
+select *
+from sales_report
+where sub_category = 'Appliances';
+
+2.
+with sub_category_sales as (
+    select p.category,p.sub_category,SUM(t.sales_amount) as sub_cat_sales
+    from ex_orders o
+    join ex_transactions t on o.order_id = t.order_id
+    join ex_products p on t.product_id = p.product_id
+    where o.order_status not in ('canceled', 'unavailable')
+    group by p.category, p.sub_category
+),
+sales_report as (
+    select category, sub_category,ROUND(100.0 * sub_cat_sales /SUM(sub_cat_sales) OVER(), 2) as overall_sales_contribution
+    from sub_category_sales
+)
+select
+    sub_category,
+    overall_sales_contribution
+from sales_report
+where sub_category IN ('Accessories', 'Storage', 'Tables', 'Furnishings') and overall_sales_contribution>7;
+
+3.
+with sub_category_sales as (
+    select p.category,p.sub_category,SUM(t.sales_amount) as sub_cat_sales
+    from ex_orders o
+    join ex_transactions t
+        on o.order_id = t.order_id
+    join ex_products p
+        on t.product_id = p.product_id
+    where o.order_status NOT IN ('canceled', 'unavailable')
+    group by p.category, p.sub_category
+),
+sales_report as (
+    select
+        category,
+        sub_category,
+        RANK() OVER (
+            PARTITION BY category
+            ORDER BY sub_cat_sales DESC
+        ) as sub_cat_rank
+    from sub_category_sales
+)
+select category,sub_category,sub_cat_rank
+from sales_report
+where sub_category = 'Machines';
