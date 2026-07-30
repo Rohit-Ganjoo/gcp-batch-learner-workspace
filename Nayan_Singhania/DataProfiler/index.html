@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Diagnostics & Cleaning Pipeline</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #d9e0ec;
+      --primary: #145c72;
+      --accent: #0f9f8f;
+      --success: #1f9d55;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --soft: #eef6f7;
+      --shadow: 0 16px 42px rgba(23, 32, 51, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: linear-gradient(135deg, #edf7f5, #f6f7fb 46%, #eef2f8);
+    }
+
+    button, input { font: inherit; }
+
+    .app {
+      width: min(1120px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 36px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      color: white;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      flex: 0 0 auto;
+      box-shadow: var(--shadow);
+    }
+
+    h1, h2, p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: 4px;
+      font-size: clamp(1.45rem, 3vw, 2.15rem);
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-bottom: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .tag {
+      padding: 8px 12px;
+      border: 1px solid rgba(15, 159, 143, 0.25);
+      border-radius: 999px;
+      background: rgba(15, 159, 143, 0.1);
+      color: #087568;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .upload {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 128px;
+      border: 2px dashed #a9b6c8;
+      border-radius: 8px;
+      background: #fbfdff;
+      cursor: pointer;
+      text-align: center;
+      padding: 20px;
+      transition: 160ms ease;
+    }
+
+    .upload:hover, .upload.dragging {
+      border-color: var(--accent);
+      background: var(--soft);
+    }
+
+    .upload input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-name {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 150ms ease;
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .btn.primary {
+      color: white;
+      background: var(--primary);
+    }
+
+    .btn.accent {
+      color: white;
+      background: var(--accent);
+    }
+
+    .btn.light {
+      color: var(--primary);
+      background: white;
+      border-color: var(--line);
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .score-card {
+      text-align: center;
+    }
+
+    .score {
+      width: 172px;
+      height: 172px;
+      margin: 8px auto 14px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--danger) 0deg, #e8edf5 0deg);
+      position: relative;
+    }
+
+    .score::after {
+      content: "";
+      position: absolute;
+      width: 128px;
+      height: 128px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .score span {
+      position: relative;
+      z-index: 1;
+      font-size: 2.35rem;
+      font-weight: 900;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfdff;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.45rem;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .panel {
+      margin-top: 16px;
+    }
+
+    .error-list {
+      max-height: 390px;
+      overflow: auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .issue {
+      padding: 12px;
+      border: 1px solid #f2c4c4;
+      border-left: 5px solid var(--danger);
+      border-radius: 8px;
+      background: #fff8f8;
+    }
+
+    .issue strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .issue span {
+      color: var(--muted);
+      overflow-wrap: anywhere;
+      font-size: 0.9rem;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: #fbfdff;
+      color: var(--muted);
+      min-height: 150px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 18px;
+    }
+
+    .empty.good {
+      color: var(--success);
+      font-weight: 800;
+    }
+
+    .table-wrap {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: auto;
+      max-height: 350px;
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      min-width: 820px;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #edf1f6;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #f2f6fb;
+      color: #344054;
+      text-transform: uppercase;
+      font-size: 0.76rem;
+    }
+
+    @media (max-width: 880px) {
+      header, .grid { grid-template-columns: 1fr; }
+      header { align-items: flex-start; }
+      .tag { white-space: normal; }
+    }
+
+    @media (max-width: 560px) {
+      .app { width: min(100% - 20px, 1120px); padding-top: 18px; }
+      .card { padding: 16px; }
+      .stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="25" height="25" fill="none">
+            <path d="M4 18V9m6 9V5m6 13v-6m4 8H4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Data Diagnostics & Cleaning Pipeline</h1>
+          <p class="subtitle">Upload a CSV, inspect errors, clean it, and download the corrected dataset.</p>
+        </div>
+      </div>
+      <div class="tag">Antigravity Challenge</div>
+    </header>
+
+    <section class="grid">
+      <div>
+        <div class="card">
+          <h2>Upload Dataset</h2>
+          <label class="upload" id="dropZone">
+            <input type="file" id="fileInput" accept=".csv,text/csv">
+            <div>
+              <strong>Choose or drop a CSV file</strong>
+              <div class="file-name" id="fileName">No file selected</div>
+            </div>
+          </label>
+          <div class="actions">
+            <button class="btn accent" id="cleanBtn" disabled>
+              <svg viewBox="0 0 24 24" fill="none"><path d="m4 14 6 6L20 4" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Clean Dataset
+            </button>
+            <button class="btn primary" id="downloadBtn" disabled>
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Download Cleaned CSV
+            </button>
+            <button class="btn light" id="resetBtn" disabled>Reset</button>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <h2>Errors Found</h2>
+          <div class="error-list" id="errorList">
+            <div class="empty">Upload a dataset to see diagnostics.</div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card score-card">
+        <h2>Quality Score</h2>
+        <div class="score" id="scoreCircle"><span id="scoreText">--</span></div>
+        <p class="subtitle" id="scoreMessage">Waiting for a CSV file.</p>
+        <div class="stats">
+          <div class="stat"><strong id="rowsCount">0</strong><span>Rows</span></div>
+          <div class="stat"><strong id="errorsCount">0</strong><span>Errors</span></div>
+          <div class="stat"><strong id="cellsCount">0</strong><span>Cells</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="card panel">
+      <h2>Dataset Preview</h2>
+      <div class="table-wrap" id="tableWrap">
+        <div class="empty">The first 12 rows will appear here.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const COLUMNS = ["customer_id", "full_name", "email", "age", "city", "signup_date", "account_balance", "phone"];
+    const EMAIL_RE = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+    const PHONE_RE = /^[2-9]\d{2}-[2-9]\d{2}-\d{4}$/;
+    const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+    const MONEY_RE = /^\d+(\.\d{2})$/;
+
+    let headers = [];
+    let rows = [];
+    let issues = [];
+    let cleanedRows = [];
+
+    const fileInput = document.getElementById("fileInput");
+    const fileName = document.getElementById("fileName");
+    const dropZone = document.getElementById("dropZone");
+    const cleanBtn = document.getElementById("cleanBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const scoreCircle = document.getElementById("scoreCircle");
+    const scoreText = document.getElementById("scoreText");
+    const scoreMessage = document.getElementById("scoreMessage");
+    const rowsCount = document.getElementById("rowsCount");
+    const errorsCount = document.getElementById("errorsCount");
+    const cellsCount = document.getElementById("cellsCount");
+    const errorList = document.getElementById("errorList");
+    const tableWrap = document.getElementById("tableWrap");
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files[0]) readCSV(fileInput.files[0]);
+    });
+
+    cleanBtn.addEventListener("click", async () => {
+      if (!rows.length) return;
+
+      cleanBtn.disabled = true;
+      cleanBtn.textContent = "Cleaning...";
+
+      try {
+        const cleanUrl = window.location.protocol === "file:" ? "http://localhost:8000/clean" : "/clean";
+        const response = await fetch(cleanUrl, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain; charset=utf-8" },
+          body: rowsToCSV(rows)
+        });
+
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+
+        const cleanedCSV = await response.text();
+        const parsed = parseCSV(cleanedCSV);
+        headers = parsed.headers;
+        rows = parsed.rows;
+        cleanedRows = parsed.rows;
+        issues = diagnose(rows, headers);
+        render();
+        downloadBtn.disabled = false;
+        fileName.textContent = "Cleaned by cleaner.py and ready to download";
+      } catch (error) {
+        alert("Could not run cleaner.py. Start the server with: python3 cleaner.py serve\n\n" + error.message);
+      } finally {
+        cleanBtn.disabled = false;
+        cleanBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none"><path d="m4 14 6 6L20 4" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Clean Dataset
+        `;
+      }
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      downloadCSV("clean_customers50.csv", rowsToCSV(cleanedRows));
+    });
+
+    resetBtn.addEventListener("click", reset);
+
+    ["dragenter", "dragover"].forEach(eventName => {
+      dropZone.addEventListener(eventName, event => {
+        event.preventDefault();
+        dropZone.classList.add("dragging");
+      });
+    });
+
+    ["dragleave", "drop"].forEach(eventName => {
+      dropZone.addEventListener(eventName, event => {
+        event.preventDefault();
+        dropZone.classList.remove("dragging");
+      });
+    });
+
+    dropZone.addEventListener("drop", event => {
+      const file = event.dataTransfer.files[0];
+      if (file) readCSV(file);
+    });
+
+    function readCSV(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const parsed = parseCSV(String(reader.result));
+        headers = parsed.headers;
+        rows = parsed.rows;
+        cleanedRows = [];
+        issues = diagnose(rows, headers);
+        fileName.textContent = file.name;
+        cleanBtn.disabled = false;
+        downloadBtn.disabled = true;
+        resetBtn.disabled = false;
+        render();
+      };
+      reader.readAsText(file);
+    }
+
+    function diagnose(data, columnNames) {
+      const errors = [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      COLUMNS.forEach(column => {
+        if (!columnNames.includes(column)) {
+          errors.push({ row: 1, column, message: "Missing required column", value: "" });
+        }
+      });
+
+      data.forEach((row, index) => {
+        const rowNumber = index + 2;
+
+        check(rowNumber, "customer_id", row.customer_id, !/^\d+$/.test(clean(row.customer_id)), "Customer ID must be numeric");
+        check(rowNumber, "full_name", row.full_name, clean(row.full_name) === "", "Name is missing");
+        check(rowNumber, "full_name", row.full_name, clean(row.full_name) !== row.full_name || clean(row.full_name) !== toTitleCase(clean(row.full_name)), "Name must be trimmed and Title Case");
+        check(rowNumber, "email", row.email, clean(row.email) === "", "Email is missing");
+        check(rowNumber, "email", row.email, clean(row.email) !== clean(row.email).toLowerCase() || clean(row.email).includes("invalid_domain") || !EMAIL_RE.test(clean(row.email)), "Email must be lowercase and valid");
+
+        const ageValue = clean(row.age);
+        const age = Number(ageValue);
+        check(rowNumber, "age", row.age, ageValue !== "N/A" && (!Number.isInteger(age) || age < 18 || age > 100), "Age must be N/A or an integer from 18 to 100");
+
+        check(rowNumber, "city", row.city, clean(row.city) === "", "City is missing");
+        check(rowNumber, "city", row.city, clean(row.city) !== row.city || clean(row.city) !== toTitleCase(clean(row.city)), "City must be trimmed and Title Case");
+
+        const dateValue = clean(row.signup_date);
+        const date = parseDate(dateValue);
+        check(rowNumber, "signup_date", row.signup_date, dateValue !== "N/A" && (!DATE_RE.test(dateValue) || !date || date > today), "Date must be N/A or valid YYYY-MM-DD and not future");
+
+        const balance = clean(row.account_balance);
+        check(rowNumber, "account_balance", row.account_balance, !MONEY_RE.test(balance) || Number(balance) < 0, "Balance must be positive with two decimals");
+        const phoneValue = clean(row.phone).toLowerCase();
+        check(rowNumber, "phone", row.phone, phoneValue !== "n/a" && !PHONE_RE.test(clean(row.phone)), "Phone must be XXX-XXX-XXXX or N/A");
+      });
+
+      return errors;
+
+      function check(row, column, value, failed, message) {
+        if (failed) errors.push({ row, column, message, value: value ?? "" });
+      }
+    }
+
+    function render() {
+      const totalCells = rows.length * COLUMNS.length;
+      const score = totalCells ? Math.round(((totalCells - issues.length) / totalCells) * 100) : 0;
+      const color = score === 100 ? "var(--success)" : score >= 80 ? "var(--warning)" : "var(--danger)";
+
+      scoreCircle.style.background = `conic-gradient(${color} ${score * 3.6}deg, #e8edf5 0deg)`;
+      scoreText.textContent = `${score}%`;
+      rowsCount.textContent = rows.length;
+      errorsCount.textContent = issues.length;
+      cellsCount.textContent = totalCells;
+      scoreMessage.textContent = issues.length === 0
+        ? "Perfect. The dataset has 0 errors."
+        : `${issues.length} errors found. Click Clean Dataset to fix them.`;
+
+      renderErrors();
+      renderTable(rows);
+    }
+
+    function renderErrors() {
+      if (!rows.length) {
+        errorList.innerHTML = `<div class="empty">Upload a dataset to see diagnostics.</div>`;
+        return;
+      }
+
+      if (!issues.length) {
+        errorList.innerHTML = `<div class="empty good">0 errors found. Clean data is ready.</div>`;
+        return;
+      }
+
+      errorList.innerHTML = issues.map(issue => `
+        <div class="issue">
+          <strong>Row ${issue.row} | ${escapeHTML(issue.column)}</strong>
+          <span>${escapeHTML(issue.message)}<br>Value: "${escapeHTML(issue.value)}"</span>
+        </div>
+      `).join("");
+    }
+
+    function renderTable(data) {
+      if (!data.length) {
+        tableWrap.innerHTML = `<div class="empty">The first 12 rows will appear here.</div>`;
+        return;
+      }
+
+      tableWrap.innerHTML = `
+        <table>
+          <thead><tr>${COLUMNS.map(column => `<th>${column}</th>`).join("")}</tr></thead>
+          <tbody>
+            ${data.slice(0, 12).map(row => `
+              <tr>${COLUMNS.map(column => `<td>${escapeHTML(row[column] ?? "")}</td>`).join("")}</tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function parseCSV(text) {
+      const records = [];
+      let row = [];
+      let field = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"' && inQuotes && next === '"') {
+          field += '"';
+          i++;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === "," && !inQuotes) {
+          row.push(field);
+          field = "";
+        } else if ((char === "\n" || char === "\r") && !inQuotes) {
+          if (char === "\r" && next === "\n") i++;
+          row.push(field);
+          if (row.some(value => value.trim() !== "")) records.push(row);
+          row = [];
+          field = "";
+        } else {
+          field += char;
+        }
+      }
+
+      row.push(field);
+      if (row.some(value => value.trim() !== "")) records.push(row);
+
+      const parsedHeaders = records[0].map(value => value.trim());
+      const parsedRows = records.slice(1).map(values => {
+        const rowObject = {};
+        parsedHeaders.forEach((header, index) => {
+          rowObject[header] = values[index] ?? "";
+        });
+        return rowObject;
+      });
+
+      return { headers: parsedHeaders, rows: parsedRows };
+    }
+
+    function rowsToCSV(data) {
+      const lines = [COLUMNS.join(",")];
+      data.forEach(row => {
+        lines.push(COLUMNS.map(column => csvEscape(row[column])).join(","));
+      });
+      return lines.join("\n");
+    }
+
+    function downloadCSV(filename, text) {
+      const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function reset() {
+      headers = [];
+      rows = [];
+      issues = [];
+      cleanedRows = [];
+      fileInput.value = "";
+      fileName.textContent = "No file selected";
+      cleanBtn.disabled = true;
+      downloadBtn.disabled = true;
+      resetBtn.disabled = true;
+      scoreCircle.style.background = "conic-gradient(var(--danger) 0deg, #e8edf5 0deg)";
+      scoreText.textContent = "--";
+      scoreMessage.textContent = "Waiting for a CSV file.";
+      rowsCount.textContent = "0";
+      errorsCount.textContent = "0";
+      cellsCount.textContent = "0";
+      renderErrors();
+      renderTable([]);
+    }
+
+    function clean(value) {
+      return String(value ?? "").trim();
+    }
+
+    function toTitleCase(value) {
+      return clean(value).toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase());
+    }
+
+    function parseDate(value) {
+      if (!DATE_RE.test(value)) return null;
+      const [year, month, day] = value.split("-").map(Number);
+      const date = new Date(year, month - 1, day);
+      if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+
+    function csvEscape(value) {
+      const text = String(value ?? "");
+      return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
