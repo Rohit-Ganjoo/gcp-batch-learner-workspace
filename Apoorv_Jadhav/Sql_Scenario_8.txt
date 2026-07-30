@@ -1,0 +1,62 @@
+--Scenario 8 -----------------------
+
+--TASK 1----
+-- State/City wise report------
+WITH sales AS(
+	SELECT
+		l.state,
+		l.city,
+		t.sales_amount
+
+	FROM ex_transactions t
+	JOIN ex_orders o
+	ON t.order_id = o.order_id
+	JOIN ex_customers c
+	ON o.customer_id = c.customer_id
+	JOIN ex_locations l
+	ON c.postal_code = l.postal_code
+),
+city_sales AS(
+	SELECT
+		state,
+		city,
+		SUM(sales_amount) AS total_sales
+
+	FROM sales
+	GROUP BY state,city
+),
+--SELECT * FROM city_sales;
+
+--TASK 2 ------
+-- Rank each city within a state by the sales done by it.
+Ranked_Sales AS(
+	SELECT
+		state,
+		city,
+		total_sales,
+		RANK() OVER (PARTITION BY state ORDER BY total_sales DESC) AS Ranking
+	FROM city_sales
+)
+--SELECT * FROM Ranked_Sales;
+
+--TASK 3--------
+-- top 3 cities arranged vertically next to 
+-- each other by their ranks for each state.
+SELECT
+    state,
+    [1] AS Top_City_1,
+    [2] AS Top_City_2,
+    [3] AS Top_City_3
+FROM (
+    SELECT
+        state,
+        city,
+        Ranking
+    FROM ranked_sales
+    WHERE Ranking <= 3
+) src
+PIVOT (
+    MAX(city)
+    FOR Ranking IN ([1], [2], [3])
+) p
+ORDER BY state;

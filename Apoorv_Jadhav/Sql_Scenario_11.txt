@@ -1,0 +1,72 @@
+WITH FlightPaths AS
+(
+    -- Anchor
+    SELECT
+        ft.[Date],
+        ft.AircraftCode,
+        ft.Trip_ID,
+        ft.Source_Airport,
+        ft.Destination_Airport,
+
+        CAST(
+                ft.Source_Airport + '>' +
+                ft.Destination_Airport
+            AS VARCHAR(MAX)
+        ) AS Path,
+
+        1 AS FlightsInPath,
+
+        CAST(',' + ft.Trip_ID + ',' AS VARCHAR(MAX)) AS VisitedTrips
+    FROM dbo.FlightTrips ft
+
+    UNION ALL
+
+    -- Recursive part
+    SELECT
+        fp.[Date],
+        fp.AircraftCode,
+        nxt.Trip_ID,
+        fp.Source_Airport,
+        nxt.Destination_Airport,
+
+        CAST(
+                fp.Path + '>' +
+                nxt.Destination_Airport
+            AS VARCHAR(MAX)
+        ) AS Path,
+
+        fp.FlightsInPath + 1,
+
+        fp.VisitedTrips + nxt.Trip_ID + ','
+    FROM FlightPaths fp
+    JOIN dbo.FlightTrips nxt
+        ON fp.[Date] = nxt.[Date]
+       AND fp.AircraftCode = nxt.AircraftCode
+       AND fp.Destination_Airport = nxt.Source_Airport
+       AND fp.VisitedTrips NOT LIKE '%,' + nxt.Trip_ID + ',%'
+),
+LongestPath AS
+(
+    SELECT
+        [Date],
+        AircraftCode,
+        Path,
+        FlightsInPath,
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY [Date], AircraftCode
+            ORDER BY FlightsInPath DESC, LEN(Path) DESC
+        ) AS rn
+    FROM FlightPaths
+)
+
+SELECT
+    [Date],
+    AircraftCode,
+    Path AS Longest_day_path
+FROM LongestPath
+WHERE rn = 1
+ORDER BY
+    [Date],
+    AircraftCode
+OPTION (MAXRECURSION 0);

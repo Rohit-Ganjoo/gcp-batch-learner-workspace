@@ -1,0 +1,147 @@
+===========================================
+GAMING PYTHON ASSESSMENT SOLUTION REPORT
+===========================================
+
+--- QUESTION 1: 1. List Comprehension ---
+[YOUR CODE]
+# You can use players_df here
+username_list = players_df['username'].tolist()
+
+# Write your code here:
+real_players = [username for username in username_list if not username.startswith('bot_')]
+
+print(real_players)
+
+[EXPECTED SOLUTION]
+real_players = [u for u in username_list if not u.startswith('bot_')]
+print(real_players)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 2: 2. Pandas Basics ---
+[YOUR CODE]
+# Write your code here:
+hardcore_sessions = sessions_df[sessions_df['duration_mins'] > 100]
+
+print(hardcore_sessions)
+
+[EXPECTED SOLUTION]
+hardcore_sessions = sessions_df[sessions_df['duration_mins'] > 100]
+print(hardcore_sessions)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 3: 3. Pandas Grouping ---
+[YOUR CODE]
+# Write your code here:
+total_duration_by_player = sessions_df.groupby('player_id')['duration_mins'].sum()
+
+print(total_duration_by_player)
+
+[EXPECTED SOLUTION]
+duration_by_player = sessions_df.groupby('player_id')['duration_mins'].sum()
+print(duration_by_player)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 4: 4. Pandas Joining ---
+[YOUR CODE]
+# Write your code here:
+merged_df = sessions_df.merge(players_df, on='player_id', how='inner')
+
+print(merged_df.head())
+
+[EXPECTED SOLUTION]
+merged_df = pd.merge(sessions_df, players_df, on='player_id', how='inner')
+print(merged_df.head())
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 5: 5. Function Apply ---
+[YOUR CODE]
+# Write your code here:
+def calculate_bonus(duration):
+    if duration > 60:
+        return 'High'
+    else:
+        return 'Low'
+
+sessions_df['engagement_tier'] = sessions_df['duration_mins'].apply(calculate_bonus)
+
+print(sessions_df)
+
+[EXPECTED SOLUTION]
+def calculate_bonus(duration):
+    return 'High' if duration > 60 else 'Low'
+
+sessions_df['engagement_tier'] = sessions_df['duration_mins'].apply(calculate_bonus)
+print(sessions_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 6: 6. Data Cleaning ---
+[YOUR CODE]
+# Write your code here:
+sessions_df['xp_gained'].fillna(0, inplace=True)
+
+print(sessions_df)
+
+[EXPECTED SOLUTION]
+sessions_df['xp_gained'] = sessions_df['xp_gained'].fillna(0)
+print(sessions_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 7: 7. String Manipulation ---
+[YOUR CODE]
+# Write your code here:
+players_df['username'] = players_df['username'].str.upper()
+
+print(players_df)
+
+[EXPECTED SOLUTION]
+players_df['username'] = players_df['username'].str.upper()
+print(players_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 8: 8. Time Series / Dates ---
+[YOUR CODE]
+# Write your code here:
+sessions_df['date'] = pd.to_datetime(sessions_df['date'])
+
+sessions_df['month'] = sessions_df['date'].dt.month
+
+print(sessions_df)
+
+[EXPECTED SOLUTION]
+sessions_df['date'] = pd.to_datetime(sessions_df['date'])
+sessions_df['month'] = sessions_df['date'].dt.month
+print(sessions_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
