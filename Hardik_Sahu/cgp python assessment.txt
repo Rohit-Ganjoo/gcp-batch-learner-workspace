@@ -1,0 +1,136 @@
+===========================================
+CPG PYTHON ASSESSMENT SOLUTION REPORT
+===========================================
+
+--- QUESTION 1: 1. List Comprehension ---
+[YOUR CODE]
+product_list = products_df['product_id'].tolist()
+active_products=[x for x in product_list if not str(x).endswith('-DIS')] 
+print(active_products)
+
+[EXPECTED SOLUTION]
+active_products = [pid for pid in product_list if not pid.endswith('-DIS')]
+print(active_products)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 2: 2. Pandas Basics ---
+[YOUR CODE]
+answer=sales_df[sales_df['revenue']>=40.0]
+print(answer)
+
+[EXPECTED SOLUTION]
+high_revenue = sales_df[sales_df['revenue'] >= 40.0]
+print(high_revenue)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 3: 3. Pandas Grouping ---
+[YOUR CODE]
+result = sales_df.groupby('category')['revenue'].sum()
+print(result)
+
+[EXPECTED SOLUTION]
+revenue_by_cat = sales_df.groupby('category')['revenue'].sum()
+print(revenue_by_cat)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 4: 4. Pandas Joining ---
+[YOUR CODE]
+result=sales_df.merge(products_df,on='product_id',how='left')
+
+print(result.head())
+
+[EXPECTED SOLUTION]
+merged_df = pd.merge(sales_df, products_df, on='product_id', how='left')
+print(merged_df.head())
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 5: 5. Function Apply ---
+[YOUR CODE]
+# Write your code here:
+# Custom function
+def apply_tax(revenue):
+    return revenue * 1.05
+
+sales_df['revenue_with_tax'] = sales_df['revenue'].apply(apply_tax)
+
+print(sales_df)
+
+[EXPECTED SOLUTION]
+def apply_tax(rev):
+    return rev * 1.05
+
+sales_df['revenue_with_tax'] = sales_df['revenue'].apply(apply_tax)
+print(sales_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 6: 6. Data Cleaning ---
+[YOUR CODE]
+sales_df.loc[sales_df['txn_id'] == 106, ['qty', 'revenue']] = sales_df.loc[sales_df['txn_id'] == 106, ['qty', 'revenue']].fillna(0)
+
+print(sales_df)
+
+[EXPECTED SOLUTION]
+sales_df['qty'] = sales_df['qty'].fillna(0)
+sales_df['revenue'] = sales_df['revenue'].fillna(0)
+print(sales_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 7: 7. String Manipulation ---
+[YOUR CODE]
+# Write your code here:
+products_df['product_name']=(products_df['product_name'].str.title())
+products_df['product_name']=products_df['product_name'].str.replace('_','.')
+
+print(products_df)
+
+[EXPECTED SOLUTION]
+products_df['product_name'] = products_df['product_name'].str.title().str.replace('_', ' ')
+print(products_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 8: 8. Time Series / Dates ---
+[YOUR CODE]
+# Write your code here:
+sales_df['date']=pd.to_datetime(sales_df['date'])
+sales_df['day_of_week']=sales_df['date'].dt.dayofweek
+print(sales_df)
+
+
+[EXPECTED SOLUTION]
+sales_df['date'] = pd.to_datetime(sales_df['date'])
+sales_df['day_of_week'] = sales_df['date'].dt.dayofweek
+print(sales_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
