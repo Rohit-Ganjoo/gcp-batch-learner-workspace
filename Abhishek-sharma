@@ -1,0 +1,157 @@
+===========================================
+DATETIME PYTHON ASSESSMENT SOLUTION REPORT
+===========================================
+
+--- QUESTION 1: 1. String Parsing ---
+[YOUR CODE]
+import pandas as pd
+# Convert the 'order_purchase_date' column from strings to datetime64 objects
+orders_df['order_purchase_date'] = pd.to_datetime(orders_df['order_purchase_date'])
+print(orders_df.dtypes)
+
+
+[EXPECTED SOLUTION]
+orders_df['order_purchase_date'] = pd.to_datetime(orders_df['order_purchase_date'], errors='coerce')
+print(orders_df.dtypes)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 2: 2. Coercing Errors ---
+[YOUR CODE]
+import pandas as pd
+# Convert 'order_delivered_date' to datetime, coercing corrupted rows to NaT
+deliveries_df['order_delivered_date'] = pd.to_datetime(deliveries_df['order_delivered_date'], errors='coerce')
+# Print deliveries_df to verify the conversion and the NaT values
+print(deliveries_df)
+
+[EXPECTED SOLUTION]
+deliveries_df['order_delivered_date'] = pd.to_datetime(deliveries_df['order_delivered_date'], errors='coerce')
+print(deliveries_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 3: 3. Merging ---
+[YOUR CODE]
+import pandas as pd
+# Merge orders_df and deliveries_df on the 'order_id' column
+cnt= pd.merge(orders_df, deliveries_df, on='order_id')
+# Print the new merged_df to verify the result
+print(cnt)
+
+[EXPECTED SOLUTION]
+merged_df = pd.merge(orders_df, deliveries_df, on='order_id')
+print(merged_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 4: 4. Time Deltas ---
+[YOUR CODE]
+
+import pandas as pd
+# Calculate the difference between delivery date and purchase date
+merged_df['delivery_time'] = merged_df['order_delivered_date'] - merged_df['order_purchase_date']
+# Print merged_df to verify the new column
+print(merged_df)
+
+[EXPECTED SOLUTION]
+merged_df['delivery_time'] = merged_df['order_delivered_date'] - merged_df['order_purchase_date']
+print(merged_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 5: 5. Component Extraction (Year) ---
+[YOUR CODE]
+merged_df['purchase_year'] = merged_df['order_purchase_date'].dt.year
+print(merged_df)
+
+
+[EXPECTED SOLUTION]
+merged_df['purchase_year'] = merged_df['order_purchase_date'].dt.year
+print(merged_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 6: 6. Component Extraction (Day Name) ---
+[YOUR CODE]
+merged_df['purchase_day'] = merged_df['order_purchase_date'].dt.day_name()
+print(merged_df)
+
+
+[EXPECTED SOLUTION]
+merged_df['is_weekend'] = merged_df['order_purchase_date'].dt.dayofweek >= 5
+print(merged_df)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 7: 7. Boolean Flags (Weekend) ---
+[YOUR CODE]
+merged_df['is_weekend'] = merged_df['order_purchase_date'].dt.dayofweek >= 5
+print(merged_df)
+
+
+[EXPECTED SOLUTION]
+q1_orders = merged_df[merged_df['order_purchase_date'].dt.quarter == 1]
+print(q1_orders)
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 8: 8. String Formatting ---
+[YOUR CODE]
+merged_df['formatted_date'] = merged_df['order_purchase_date'].dt.strftime('%Y/%m/%d')
+print(merged_df)
+
+[EXPECTED SOLUTION]
+# No solution provided
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 9: 9. Time Periods ---
+[YOUR CODE]
+merged_df['purchase_month_bucket'] = merged_df['order_purchase_date'].dt.to_period('M')
+print(merged_df)
+
+[EXPECTED SOLUTION]
+# No solution provided
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
+
+--- QUESTION 10: 10. Date Sequences ---
+[YOUR CODE]
+import pandas as pd
+b_day = pd.date_range(start='2026-07-01',periods = 10,freq = 'B')
+print(b_day)
+
+[EXPECTED SOLUTION]
+# No solution provided
+
+[FEEDBACK]
+Great attempt! Compare your logic with the expected solution.
+
+===========================================
