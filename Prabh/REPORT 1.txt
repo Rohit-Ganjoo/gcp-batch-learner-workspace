@@ -1,0 +1,37 @@
+REPORT 1
+
+--category	sub_category	sales	tot_cat_sales	cumm_sales	contrib_1	contrib_2
+-- contrib_2 - % contribution till a given sub_category to category sales
+WITH sub_category_det as (
+	SELECT category,sub_category,round(sum(sales_amount),2)  as sales
+	FROM ex_transactions t JOIN ex_products p
+		ON t.product_id=p.product_id
+	GROUP BY category,sub_category),
+category_det as (
+	SELECT *, round(sum(sales) over(partition by category),2) as tot_cat_sales,
+	round(sum(sales) over (partition by category order by category,sub_category),2) as cumm_sales,
+	round((sales*100.00)/sum(sales) over(partition by category),2) as contrib_1,
+	round(((sum(sales) over (partition by category order by category,sub_category)*100.00)/sum(sales) over(partition by category)),2) as contrib_2
+	FROM sub_category_det 
+)
+SELECT * from category_det order by category,sub_category;
+
+
+REPORT 2
+--category	sub_category	sales	tot_cat_sales	cumm_sales	contrib_1	contrib_2
+-- contrib_2 - % contribution till a given sub_category to category sales
+WITH sub_category_det as (
+	SELECT category,sub_category,round(sum(sales_amount),2)  as sales
+	FROM ex_transactions t JOIN ex_products p 
+		ON t.product_id=p.product_id
+		JOIN ex_orders o ON t.order_id=o.order_id
+	--WHERE o.order_status='delivered'
+	GROUP BY category,sub_category),
+category_det as (
+	SELECT *, round(sum(sales) over(partition by category),2) as tot_cat_sales,
+	round(sum(sales) over (partition by category order by category,sub_category),2) as cumm_sales,
+	round((sales*100.00)/sum(sales) over(partition by category),2) as contrib_1,
+	round(((sum(sales) over (partition by category order by category,sub_category)*100.00)/sum(sales) over(partition by category)),2) as contrib_2
+	FROM sub_category_det 
+)
+SELECT * from category_det where contrib_2>50 order by category,sub_category ;
