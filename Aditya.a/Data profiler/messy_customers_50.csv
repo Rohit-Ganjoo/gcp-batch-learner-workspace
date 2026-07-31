@@ -1,0 +1,51 @@
+customer_id,full_name,email,age,city,signup_date,account_balance,phone
+101, ethan hopper ,ETHAN.HOPPER@GMAIL.COM,39,Seattle,2023-04-05,$1779.50,792-858-9935
+102,Eva Gonzalez,Eva.Gonzalez@invalid_domain,49,New York,2023-01-03,N/A,323-338-9279
+103,Mason Smith,mason.smith@corp.net,150,Denver,2023-07-08,-279.00,703-384-1106
+104,Michael Anderson,michael.anderson@company.io,,Austin,2023-06-09,3047.00,
+105,Laura Edwards,laura.edwards@email.com,28,New York ,2023-07-04,6381.00,(967) 452-5333
+106,Bob Parker,bob.parker@domain.org,56,Chicago,INVALID_DATE,1791.00,665.400.6925
+107,Benjamin Jackson,benjamin.jackson@company.io,26,New York,2023-11-08,13165.00,396-181-4814
+108, david walker ,DAVID.WALKER@EMAIL.COM,51,Los Angeles,2023-03-12,$5920.50,314-786-5374
+109,Henry Turner,Henry.Turner@invalid_domain,63,Chicago,2023-10-21,N/A,275-646-5010
+110,Ian King,ian.king@domain.org,200,Denver,2023-04-22,-216.00,963-886-1916
+111,Michael Johnson,michael.johnson@email.com,,Austin,2023-05-03,3956.00,
+112,Benjamin Campbell,benjamin.campbell@email.com,35,Seattle ,2023-07-21,8017.00,(246) 371-3287
+113,Nina Evans,nina.evans@corp.net,56,Boston,2025-12-31,7519.00,697.508.6930
+114,Michael Castle,michael.castle@corp.net,53,Chicago,2023-01-28,2296.00,256-742-3621
+115, harper young ,HARPER.YOUNG@CORP.NET,26,Austin,2023-07-20,$7768.50,641-357-1188
+116,Harper Parker,Harper.Parker@invalid_domain,29,Denver,2023-05-25,N/A,756-448-2827
+117,Rachel Young,rachel.young@yahoo.com,N/A,New York,2023-12-24,-184.00,612-880-3927
+118,James Black,james.black@company.io,,Boston,2023-11-17,10477.00,
+119,Kevin Taylor,kevin.taylor@email.com,32,boston,2023-09-01,10313.00,(431) 600-1319
+120,Grace Lee,grace.lee@email.com,37,New York,04-18-2022,14885.00,680.180.2403
+121,Jacob Lopez,jacob.lopez@gmail.com,56,San Francisco,2023-03-22,8287.00,662-269-5342
+122, isabella nelson ,ISABELLA.NELSON@DOMAIN.ORG,35,Denver,2023-12-23,$3395.50,830-419-7537
+123,Alexander Perez,Alexander.Perez@invalid_domain,45,Miami,2023-09-15,N/A,223-353-4681
+124,Charlie Rodriguez,charlie.rodriguez@gmail.com,null,Denver,2023-04-19,-162.00,107-172-1964
+125,Michael White,michael.white@gmail.com,,Los Angeles,2023-02-17,4399.00,
+126,Paul Roberts,paul.roberts@domain.org,35,boston,2023-03-24,14956.00,(684) 690-8744
+127,Nina Wright,nina.wright@domain.org,34,Chicago,2023/05/12,11296.00,541.462.7939
+128,Liam King,liam.king@company.io,25,Chicago,2023-01-13,12431.00,447-919-2790
+129, nina jackson ,NINA.JACKSON@YAHOO.COM,56,Miami,2023-03-14,$3106.50,385-573-5092
+130,Charlie Hernandez,Charlie.Hernandez@invalid_domain,57,Chicago,2023-01-21,N/A,653-956-1241
+131,Eva Edwards,eva.edwards@yahoo.com,150,Austin,2023-08-16,-159.00,985-510-1960
+132,Ian Walker,ian.walker@gmail.com,,Austin,2023-05-26,13363.00,
+133,Olivia Martinez,olivia.martinez@domain.org,66,boston,2023-11-23,8473.00,(258) 294-5861
+134,Laura Brown,laura.brown@corp.net,56,New York,Jan 15 2024,1436.00,151.698.8811
+135,James Scott,james.scott@yahoo.com,25,Denver,2023-02-28,3544.00,170-709-2113
+136, harper martin ,HARPER.MARTIN@DOMAIN.ORG,29,Atlanta,2023-04-19,$751.50,734-183-7868
+137,Alexander Gonzalez,Alexander.Gonzalez@invalid_domain,58,Denver,2023-06-09,N/A,309-785-6147
+138,Nina Thompson,nina.thompson@domain.org,150,Boston,2023-08-11,-434.00,174-109-8508
+139,Charlotte Baker,charlotte.baker@gmail.com,,Chicago,2023-09-07,8788.00,
+140,Oscar Castle,oscar.castle@email.com,26,chicago ,2023-06-10,3084.00,(548) 953-9900
+141,Evelyn Robinson,evelyn.robinson@corp.net,63,Denver,2023/05/12,11442.00,936.667.5905
+142,Alexander Black,alexander.black@yahoo.com,38,Chicago,2023-02-24,9564.00,259-378-5616
+143, mason white ,MASON.WHITE@COMPANY.IO,43,Seattle,2023-11-21,$4425.50,617-600-5114
+144,Alice Green,Alice.Green@invalid_domain,62,Austin,2023-05-02,N/A,103-441-3143
+145,Ethan Thompson,ethan.thompson@yahoo.com,N/A,Denver,2023-12-14,-337.00,109-214-2232
+146,Henry Taylor,henry.taylor@corp.net,,New York,2023-06-19,9552.00,
+147,Hannah Young,hannah.young@yahoo.com,24,SAN FRANCISCO,2023-06-26,14601.00,(140) 466-4441
+148,Harper Martin,harper.martin@company.io,28,Los Angeles,2025-12-31,14985.00,995.516.3532
+149,Nina Anderson,nina.anderson@yahoo.com,48,New York,2023-03-24,5942.00,901-521-5065
+150, paul anderson ,PAUL.ANDERSON@COMPANY.IO,28,Austin,2023-01-28,$7811.50,327-304-8541

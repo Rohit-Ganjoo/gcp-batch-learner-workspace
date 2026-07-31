@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antigravity Data Quality Scanner & Profiler Engine</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- Brand Header -->
+    <header class="app-header">
+      <div class="brand-wrapper">
+        <div class="brand-logo">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Antigravity Data Quality Profiler</h1>
+          <p>Automated Enterprise Diagnostics & Python Cleaning Pipeline</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge-purple"><i class="fa-solid fa-bolt"></i> Real-time Profiler</span>
+        <span class="badge badge-cyan" id="lblHealthStatus"><i class="fa-solid fa-circle-check"></i> Ready</span>
+      </div>
+    </header>
+
+    <!-- Workflow Architecture Stepper (As per user request image) -->
+    <section class="workflow-section">
+      <div class="section-title">
+        <i class="fa-solid fa-diagram-project" style="color: var(--accent-cyan);"></i>
+        System Architecture & Workflow Pipeline
+      </div>
+      <div class="stepper">
+        <div class="step-card" id="step1Card">
+          <div class="step-num">1</div>
+          <div class="step-info">
+            <h4>Raw Dataset</h4>
+            <p>messy_customers_50.csv</p>
+          </div>
+        </div>
+        <div class="step-card" id="step2Card">
+          <div class="step-num">2</div>
+          <div class="step-info">
+            <h4>Web App Scanner</h4>
+            <p>DQ Rule Validation Engine</p>
+          </div>
+        </div>
+        <div class="step-card" id="step3Card">
+          <div class="step-num">3</div>
+          <div class="step-info">
+            <h4>Dashboard Report</h4>
+            <p>Identify & Log All Errors</p>
+          </div>
+        </div>
+        <div class="step-card" id="step4Card">
+          <div class="step-num">4</div>
+          <div class="step-info">
+            <h4>Python Cleanup</h4>
+            <p>clean_data.py execution</p>
+          </div>
+        </div>
+        <div class="step-card" id="step5Card">
+          <div class="step-num">5</div>
+          <div class="step-info">
+            <h4>Re-Upload Clean CSV</h4>
+            <p>cleaned_customers_50.csv</p>
+          </div>
+        </div>
+        <div class="step-card" id="step6Card">
+          <div class="step-num">6</div>
+          <div class="step-info">
+            <h4>SUCCESS: 0 Errors</h4>
+            <p>Showcase to Judges 🎉</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Upload & Quick Actions Section -->
+    <section class="upload-grid">
+      <!-- Drag & Drop Zone -->
+      <div class="dropzone-card" id="dropzone" onclick="document.getElementById('csvFileInput').click()">
+        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+        <h3>Drag & Drop CSV File Here</h3>
+        <p>Or click to browse files from your computer</p>
+        <button class="btn btn-primary"><i class="fa-solid fa-folder-open"></i> Select File</button>
+        <input type="file" id="csvFileInput" class="file-input" accept=".csv">
+      </div>
+
+      <!-- Quick Action Cards -->
+      <div class="quick-load-card">
+        <div>
+          <div class="section-title" style="margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-rocket" style="color: var(--accent-indigo);"></i> 1-Click Pipeline Testing
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">
+            Instantly test raw messy dataset vs clean output without uploading files manually!
+          </p>
+        </div>
+        <div class="quick-actions">
+          <button class="btn btn-rose" id="btnLoadMessy">
+            <i class="fa-solid fa-triangle-exclamation"></i> Load Raw Messy CSV (messy_customers_50.csv)
+          </button>
+          <button class="btn btn-emerald" id="btnLoadClean">
+            <i class="fa-solid fa-circle-check"></i> Re-Upload Clean CSV (cleaned_customers_50.csv)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUCCESS BANNER (Shown when 0 Errors achieved) -->
+    <div id="successBanner" class="success-banner hidden">
+      <div class="success-banner-info">
+        <div class="success-banner-icon">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <div>
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: #ECFDF5;">SUCCESS: 100% Data Quality Score!</h2>
+          <p style="color: #A7F3D0; font-size: 0.95rem;">0 Data Quality Errors detected across all records! Ready to pitch to the judges!</p>
+        </div>
+      </div>
+      <button class="btn btn-emerald" id="btnDownloadClean">
+        <i class="fa-solid fa-download"></i> Download Cleaned CSV
+      </button>
+    </div>
+
+    <!-- Executive KPI Metrics Cards -->
+    <section class="metrics-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Total Records</span>
+          <i class="fa-solid fa-database kpi-icon"></i>
+        </div>
+        <div class="kpi-value" id="lblTotalRecords">0</div>
+        <div class="kpi-sub">Customer Rows Analyzed</div>
+      </div>
+
+      <div class="kpi-card" id="cardDqScore">
+        <div class="kpi-header">
+          <span class="kpi-title">Data Quality Score</span>
+          <i class="fa-solid fa-chart-line kpi-icon"></i>
+        </div>
+        <div class="kpi-value" id="lblQualityScore" style="color: var(--accent-cyan);">0.0%</div>
+        <div class="kpi-sub">Overall Health Percentage</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">DQ Errors Found</span>
+          <i class="fa-solid fa-bug kpi-icon"></i>
+        </div>
+        <div class="kpi-value" id="lblTotalErrors" style="color: var(--accent-rose);">0</div>
+        <div class="kpi-sub">Flaws & Anomalies Identified</div>
+      </div>
+    </section>
+
+    <!-- Visual Analytics: Circular Gauge + Error Distribution Chart -->
+    <section class="analytics-grid">
+      <!-- Quality Score Meter -->
+      <div class="analytics-card">
+        <div class="section-title">
+          <i class="fa-solid fa-gauge-high" style="color: var(--accent-cyan);"></i> Quality Score Meter
+        </div>
+        <div class="gauge-wrapper">
+          <div class="gauge-circle" id="gaugeCircle">
+            <div class="gauge-center">
+              <div class="gauge-percent" id="gaugePercent">0%</div>
+              <div class="gauge-label">Quality Score</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column Error Breakdown -->
+      <div class="analytics-card">
+        <div class="section-title">
+          <i class="fa-solid fa-chart-bar" style="color: var(--accent-purple);"></i> DQ Flaws Breakdown by Field
+        </div>
+        <div class="chart-bars" id="chartBars">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Data Table & Error Highlight View -->
+    <section class="table-section">
+      <div class="table-toolbar">
+        <div class="section-title" style="margin-bottom: 0;">
+          <i class="fa-solid fa-table-cells" style="color: var(--accent-indigo);"></i> Data Profiling & Diagnostics Grid
+        </div>
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="tableSearch" class="search-input" placeholder="Search customer records...">
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Age</th>
+              <th>City</th>
+              <th>Signup Date</th>
+              <th>Account Balance</th>
+              <th>Phone</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Python Cleaning Script Reference -->
+    <section class="code-section">
+      <div class="code-header">
+        <div class="section-title" style="margin-bottom: 0;">
+          <i class="fa-brands fa-python" style="color: #38BDF8;"></i> Python Cleanup Script (clean_data.py)
+        </div>
+        <span class="tag-success"><i class="fa-solid fa-check"></i> Standard Python 3</span>
+      </div>
+      <div class="code-container">
+        <pre><code># clean_data.py - Data Diagnostics & Cleaning Pipeline
+import csv, re, os
+from datetime import datetime
+
+def clean_dataset(input_file, output_file):
+    # Reads messy_customers_50.csv
+    # 1. Trims & Title cases full_name & city
+    # 2. Fixes invalid email domains & converts to lowercase
+    # 3. Imputes missing/outlier age (>100 or <18) with median age
+    # 4. Formats signup_date to ISO YYYY-MM-DD (fixes INVALID_DATE & future dates)
+    # 5. Strips '$', converts negative balance to positive, handles N/A
+    # 6. Formats phone to standard XXX-XXX-XXXX format
+    # Produces 100% clean dataset (cleaned_customers_50.csv) with 0 DQ Errors!
+</code></pre>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <i class="fa-solid fa-circle-info" style="color: var(--accent-cyan); font-size: 1.2rem;"></i>
+    <span id="toastMsg">Notification message</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
