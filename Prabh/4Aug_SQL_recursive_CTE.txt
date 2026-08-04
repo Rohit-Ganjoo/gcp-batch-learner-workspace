@@ -1,0 +1,13 @@
+select * from flighttrips;
+
+with rec_cte as(
+	SELECT [Date],aircraftCode, source_airport,destination_airport,CAST(source_airport + '>' + destination_airport AS VARCHAR(200))  as [path]
+	FROM flighttrips
+	UNION ALL
+	SELECT r.[Date],r.aircraftCode,r.source_airport,r.destination_airport,CAST(rc.[path] + '>' + r.destination_airport AS VARCHAR(200))  as [path]
+	FROM rec_cte rc join flighttrips r 
+	on rc.destination_airport=r.source_airport
+		AND rc.date=r.date
+
+)
+select * from rec_cte;

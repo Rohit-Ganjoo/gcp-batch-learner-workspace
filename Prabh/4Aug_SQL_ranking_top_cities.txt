@@ -1,0 +1,116 @@
+-- TASK 1
+
+with location_cust as (
+	select city,[state],customer_id
+	from ex_customers c join ex_locations l
+	on c.postal_code = l.postal_code
+),
+order_sales as (
+	select city,[state],lc.customer_id,
+	o.order_id,sales_amount
+	from location_cust lc join ex_orders o
+	on o.customer_id=lc.customer_id
+	join ex_transactions t on t.order_id=o.order_id
+
+)
+select [state],city,round(sum(sales_amount),2) as total_sales 
+from order_sales 
+group by city,[state];
+
+-- TASK 2
+WITH location_cust AS
+(
+    SELECT
+        l.city,
+        l.[state],
+        c.customer_id
+    FROM ex_customers c
+    JOIN ex_locations l
+        ON c.postal_code = l.postal_code
+),
+order_sales AS
+(
+    SELECT
+        lc.city,
+        lc.[state],
+        o.order_id,
+        t.sales_amount
+    FROM location_cust lc
+    JOIN ex_orders o
+        ON o.customer_id = lc.customer_id
+    JOIN ex_transactions t
+        ON t.order_id = o.order_id
+),
+city_sales AS
+(
+    SELECT
+        [state],
+        city,
+        SUM(sales_amount) AS total_sales
+    FROM order_sales
+    GROUP BY [state], city
+)
+SELECT
+    [state],
+    city,
+    total_sales,
+    RANK() OVER
+    (
+        PARTITION BY [state]
+        ORDER BY total_sales DESC
+    ) AS city_rank
+FROM city_sales;
+
+-- TASK 3
+WITH location_cust AS
+(
+    SELECT
+        l.city,
+        l.[state],
+        c.customer_id
+    FROM ex_customers c
+    JOIN ex_locations l
+        ON c.postal_code = l.postal_code
+),
+order_sales AS
+(
+    SELECT
+        lc.[state],
+        lc.city,
+        t.sales_amount
+    FROM location_cust lc
+    JOIN ex_orders o
+        ON o.customer_id = lc.customer_id
+    JOIN ex_transactions t
+        ON t.order_id = o.order_id
+),
+city_sales AS
+(
+    SELECT
+        [state],
+        city,
+        SUM(sales_amount) AS total_sales
+    FROM order_sales
+    GROUP BY [state], city
+),
+ranked_cities AS
+(
+    SELECT
+        [state],
+        city,
+        RANK() OVER
+        (
+            PARTITION BY [state]
+            ORDER BY total_sales DESC
+        ) AS city_rank
+    FROM city_sales
+)
+SELECT
+    [state],
+    MAX(CASE WHEN city_rank = 1 THEN city END) AS [Rank 1],
+    MAX(CASE WHEN city_rank = 2 THEN city END) AS [Rank 2],
+    MAX(CASE WHEN city_rank = 3 THEN city END) AS [Rank 3]
+FROM ranked_cities
+WHERE city_rank <= 3
+GROUP BY [state]
+ORDER BY [state];
