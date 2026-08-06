@@ -1,0 +1,164 @@
+import numpy as np
+import pandas as pd
+
+customers_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/9eab6c04-532b-40d3-9d5e-2438ec366ee0_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20customers(1).csv")
+orders_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/ae936127-9b09-4c93-912e-1d6a862b5f82_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20orders.csv")
+transactions_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/dd2b3166-8bd1-4410-b2a2-a839345fb9e2_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20transactions.csv")
+returns_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/78adf709-576b-4d70-9ce8-418aca84b0ef_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20returns.csv")
+
+returns_df.groupby('return_reason').agg({'order_id': 'count'}).sort_values(by='order_id', ascending=False)
+
+
+import numpy as np
+import pandas as pd
+
+customers_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/9eab6c04-532b-40d3-9d5e-2438ec366ee0_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20customers(1).csv")
+orders_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/ae936127-9b09-4c93-912e-1d6a862b5f82_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20orders.csv")
+transactions_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/dd2b3166-8bd1-4410-b2a2-a839345fb9e2_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20transactions.csv")
+returns_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/78adf709-576b-4d70-9ce8-418aca84b0ef_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20returns.csv")
+
+orders_transactions_df = pd.merge(orders_df, transactions_df, on='order_id', how='left')
+
+customer_orders_df = pd.merge(customers_df, orders_transactions_df, on='customer_id', how='left')
+
+customer_orders_df['order_purchase_date'] = pd.to_datetime(customer_orders_df['order_purchase_date'], errors='coerce')
+
+customer_orders_df = pd.merge(customer_orders_df, returns_df, on='order_id', how='left')
+
+customer_orders_df['return_reason'] = customer_orders_df['return_reason'].fillna('No Return')
+
+customer_metrics = customer_orders_df.groupby(['customer_id', 'customer_name']).agg(
+    tot_orders=('order_id', 'nunique'),
+    total_order_value=('sales_amt', 'sum'),
+    total_units=('qty', 'sum'),
+    first_purchase_date=('order_purchase_date', 'min'),
+    last_purchase_date=('order_purchase_date', 'max')
+).reset_index()
+
+customer_returns = customer_orders_df[customer_orders_df['return_reason'] != 'No Return'].groupby('customer_id')['order_id'].nunique().reset_index(name='tot_returns')
+
+customer_metrics = pd.merge(customer_metrics, customer_returns, on='customer_id', how='left')
+customer_metrics['tot_returns'] = customer_metrics['tot_returns'].fillna(0).astype(int)
+
+customer_metrics['avg_basket_size'] = (customer_metrics['total_units'] / customer_metrics['tot_orders']).fillna(0).astype(int)
+
+customer_metrics['avg_basket_value'] = customer_metrics['total_order_value'] / customer_metrics['tot_orders']
+customer_metrics['avg_basket_value'] = customer_metrics['avg_basket_value'].map('${:,.2f}'.format).fillna('$0.00')
+
+customer_metrics['length_of_stay_days'] = (customer_metrics['last_purchase_date'] - customer_metrics['first_purchase_date']).dt.days
+
+customer_metrics['order_purchase_frequency'] = (customer_metrics['length_of_stay_days'] / customer_metrics['tot_orders']).round().fillna(0).astype(int)
+
+customer_metrics['avg_basket_value_numeric'] = customer_metrics['avg_basket_value'].replace({r'[$,]': ''}, regex=True).astype(float)
+
+customer_metrics['frequency_rank'] = customer_metrics['order_purchase_frequency'].rank(method='dense', ascending=True)
+
+customer_metrics['avg_basket_value_rank'] = customer_metrics['avg_basket_value_numeric'].rank(method='dense', ascending=False)
+
+customer_metrics['avg_rank'] = (customer_metrics['frequency_rank'] + customer_metrics['avg_basket_value_rank']) / 2
+
+def categorize_customer(rank):
+    if rank >= 300:
+        return 'Detractors'
+    elif 150 <= rank <= 299:
+        return 'Potentials'
+    else:
+        return 'Promoters'
+
+customer_metrics['Customer_Category'] = customer_metrics['avg_rank'].apply(categorize_customer)
+
+final_customer_df = customer_metrics[[
+    'customer_name',
+    'tot_orders',
+    'tot_returns',
+    'total_order_value',
+    'avg_basket_size',
+    'avg_basket_value',
+    'length_of_stay_days',
+    'order_purchase_frequency',
+    'avg_rank',
+    'Customer_Category'
+]].sort_values(by='avg_rank').reset_index(drop=True)
+
+
+final_customer_df['avg_basket_value_numeric'] = final_customer_df['avg_basket_value'].replace({r'[$,]': ''}, regex=True).astype(float)
+
+top_3_spenders = final_customer_df.sort_values(by='avg_basket_value_numeric', ascending=False).head(3)
+
+print("Top 3 customers with the highest avg_basket_value:")
+display(top_3_spenders[['customer_name', 'avg_basket_value']])
+
+
+
+import numpy as np
+import pandas as pd
+
+customers_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/9eab6c04-532b-40d3-9d5e-2438ec366ee0_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20customers(1).csv")
+orders_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/ae936127-9b09-4c93-912e-1d6a862b5f82_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20orders.csv")
+transactions_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/dd2b3166-8bd1-4410-b2a2-a839345fb9e2_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20transactions.csv")
+returns_df = pd.read_csv("https://mentorskool-platform-uploads.s3.ap-south-1.amazonaws.com/documents/78adf709-576b-4d70-9ce8-418aca84b0ef_83d04ac6-cb74-4a96-a06a-e0d5442aa126_Dataset%20-%20Ecommerce.xlsx%20-%20returns.csv")
+
+orders_transactions_df = pd.merge(orders_df, transactions_df, on='order_id', how='left')
+
+customer_orders_df = pd.merge(customers_df, orders_transactions_df, on='customer_id', how='left')
+
+customer_orders_df['order_purchase_date'] = pd.to_datetime(customer_orders_df['order_purchase_date'], errors='coerce')
+
+customer_orders_df = pd.merge(customer_orders_df, returns_df, on='order_id', how='left')
+
+customer_orders_df['return_reason'] = customer_orders_df['return_reason'].fillna('No Return')
+
+customer_metrics = customer_orders_df.groupby(['customer_id', 'customer_name']).agg(
+    tot_orders=('order_id', 'nunique'),
+    total_order_value=('sales_amt', 'sum'),
+    total_units=('qty', 'sum'),
+    first_purchase_date=('order_purchase_date', 'min'),
+    last_purchase_date=('order_purchase_date', 'max')
+).reset_index()
+
+customer_returns = customer_orders_df[customer_orders_df['return_reason'] != 'No Return'].groupby('customer_id')['order_id'].nunique().reset_index(name='tot_returns')
+
+customer_metrics = pd.merge(customer_metrics, customer_returns, on='customer_id', how='left')
+customer_metrics['tot_returns'] = customer_metrics['tot_returns'].fillna(0).astype(int)
+
+customer_metrics['avg_basket_size'] = (customer_metrics['total_units'] / customer_metrics['tot_orders']).fillna(0).astype(int)
+
+customer_metrics['avg_basket_value'] = customer_metrics['total_order_value'] / customer_metrics['tot_orders']
+customer_metrics['avg_basket_value'] = customer_metrics['avg_basket_value'].map('${:,.2f}'.format).fillna('$0.00')
+
+customer_metrics['length_of_stay_days'] = (customer_metrics['last_purchase_date'] - customer_metrics['first_purchase_date']).dt.days
+
+customer_metrics['order_purchase_frequency'] = (customer_metrics['length_of_stay_days'] / customer_metrics['tot_orders']).round().fillna(0).astype(int)
+
+customer_metrics['avg_basket_value_numeric'] = customer_metrics['avg_basket_value'].replace({r'[$,]': ''}, regex=True).astype(float)
+
+customer_metrics['frequency_rank'] = customer_metrics['order_purchase_frequency'].rank(method='dense', ascending=True)
+
+customer_metrics['avg_basket_value_rank'] = customer_metrics['avg_basket_value_numeric'].rank(method='dense', ascending=False)
+
+customer_metrics['avg_rank'] = (customer_metrics['frequency_rank'] + customer_metrics['avg_basket_value_rank']) / 2
+
+def categorize_customer(rank):
+    if rank >= 300:
+        return 'Detractors'
+    elif 150 <= rank <= 299:
+        return 'Potentials'
+    else:
+        return 'Promoters'
+
+customer_metrics['Customer_Category'] = customer_metrics['avg_rank'].apply(categorize_customer)
+
+final_customer_df = customer_metrics[[
+    'customer_name',
+    'tot_orders',
+    'tot_returns',
+    'total_order_value',
+    'avg_basket_size',
+    'avg_basket_value',
+    'length_of_stay_days',
+    'order_purchase_frequency',
+    'avg_rank',
+    'Customer_Category'
+]].sort_values(by='avg_rank').reset_index(drop=True)
+
+final_customer_df.groupby('Customer_Category')['customer_name'].count()
