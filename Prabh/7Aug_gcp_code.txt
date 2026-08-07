@@ -1,0 +1,182 @@
+CREATE OR REPLACE TABLE `silver.payments` AS
+SELECT 
+  TRIM(PaymentID) as payment_id,
+  TRIM(OrderID) as order_id,
+  PaymentDate as payment_date,
+  GiftCardUsage as gift_card_usage,
+  coalesce(GiftCardAmount,0) as gift_card_amount,
+  CouponUsage as coupon_usage,
+  coalesce(CouponAmount,0) as coupon_amount,
+  TRIM(PaymentMethodID) as payment_method_id
+FROM `bronze.payments`;
+CREATE OR REPLACE TABLE `silver.customers` AS
+SELECT DISTINCT
+  TRIM(CAST(CustomerID AS STRING)) AS customer_id,
+  TRIM(CAST(FirstName AS STRING)) AS first_name,
+  TRIM(CAST(LastName AS STRING)) AS last_name,
+  LOWER(TRIM(CAST(Email AS STRING))) AS email,
+  TRIM(CAST(PhoneNumber AS STRING)) AS phone_number,
+  SAFE_CAST(DateOfBirth AS DATE) AS date_of_birth,
+  SAFE_CAST(RegistrationDate AS DATE) AS registration_date,
+  TRIM(CAST(PreferredPaymentMethodID AS STRING)) AS preferred_payment_method_id,
+  _ingested_at as ingested_at,
+  trim(_source_file) as source_file
+FROM `bronze.customers`
+WHERE CustomerID IS NOT NULL;
+
+-- 2. Migrating Addresses Table
+CREATE OR REPLACE TABLE `silver.addresses` AS
+SELECT DISTINCT
+  TRIM(CAST(AddressID AS STRING)) AS address_id,
+  TRIM(CAST(CustomerID AS STRING)) AS customer_id,
+  TRIM(REGEXP_REPLACE(CAST(AddressLine1 AS STRING), r'\n', ', ')) AS address_line_1,
+  TRIM(CAST(City AS STRING)) AS city,
+  TRIM(REGEXP_REPLACE(CAST(State AS STRING), r'_', ' ')) AS state,
+  CAST(CAST(SAFE_CAST(PinCode AS FLOAT64) AS INT64) AS STRING) AS zip_code,
+  TRIM(REGEXP_REPLACE(CAST(AddressType AS STRING), r'[,_]', ' & ')) AS address_type,
+  _ingested_at as ingested_at,
+  trim(_source_file) as source_file
+FROM `bronze.addresses`
+WHERE AddressID IS NOT NULL;
+
+-- 3. Now it is your turn! Continue writing CREATE OR REPLACE TABLE statements 
+CREATE OR REPLACE TABLE `silver.customer_consent` AS
+SELECT DISTINCT 
+  TRIM(CAST(CustomerID AS STRING)) AS customer_id,
+  TITLE(TRIM(FirstName)) as first_name,
+  TITLE(TRIM(LastName)) as last_name,
+  LOWER(TRIM(CAST(Email AS STRING))) AS email,
+  TRIM(CAST(PhoneNumber AS STRING)) AS phone_number,
+  SAFE_CAST(DateOfBirth AS DATE) AS date_of_birth,
+  SAFE_CAST(RegistrationDate AS DATE) AS registration_date,
+  TRIM(CAST(PreferredPaymentMethodID AS STRING)) AS preferred_payment_method_id,
+  SAFE_CAST(consent_timestamp AS TIMESTAMP) AS connsent_timestamp,
+  CASE
+    WHEN LOWER(TRIM(third_party_data_sharing)) = 'Yes' THEN TRUE
+    WHEN LOWER(TRIM(third_party_data_sharing)) = 'No'  THEN FALSE
+    ELSE NULL  
+  END AS third_party_data_sharing,
+  CASE
+    WHEN LOWER(TRIM(marketing_communication)) = 'Yes' THEN TRUE
+    WHEN LOWER(TRIM(marketing_communication)) = 'No'  THEN FALSE
+    ELSE NULL  
+  END AS marketing_communication,
+  CASE
+    WHEN LOWER(TRIM(cookies_tracking)) = 'Yes' THEN TRUE
+    WHEN LOWER(TRIM(cookies_tracking)) = 'No'  THEN FALSE
+    ELSE NULL  
+  END AS cookies_tracking,
+  _ingested_at as ingested_at,
+  trim(_source_file) as source_file
+FROM `bronze.customer_consent` WHERE CustomerID IS NOT NULL;
+
+CREATE OR REPLACE TABLE `silver.order_items` AS
+SELECT DISTINCT
+  TRIM(order_item_id ) AS order_item_id,
+  TRIM(order_id ) AS order_id,
+  TRIM(product_id) AS product_id,
+  quantity as quantity,
+  _ingested_at as ingested_at,
+  trim(_source_system) as source_system
+FROM `bronze.order_items`;
+CREATE OR REPLACE TABLE `silver.orders` AS
+SELECT DISTINCT
+  TRIM(CAST(order_id AS STRING)) AS order_id,
+  TRIM(CAST(customer_id AS STRING)) AS customer_id,
+  order_date AS order_date,
+  shipping_date as shipping_date,
+  expected_delivery_date as expected_delivery_date,
+  TRIM(shipping_tier_id) as shipping_tier_id,
+  TRIM(order_channel) as order_channel,
+  _ingested_at as ingested_at,
+  trim(_source_system) as _source_system
+FROM `bronze.orders`;
+
+CREATE OR REPLACE TABLE `silver.payment_methods` AS
+SELECT DISTINCT
+  TRIM(PaymentMethodID ) AS payment_method_id,
+  REGEXP_REPLACE(TRIM(MethodName ), r'-', ' ') AS method_name,
+  _ingested_at as ingested_at,
+  trim(_source_file) as source_file
+FROM `bronze.payment_methods`;
+
+CREATE OR REPLACE TABLE `silver.pipeline_watermarks` AS
+SELECT DISTINCT
+  TRIM(table_name) AS order_id,
+  last_processed_watermark as last_processed_watermark,
+  trim(last_processed_file) as last_processed_file,
+  updated_at as updated_at,
+  _ingested_at as ingested_at,
+  trim(_source_system) as _source_system
+FROM `bronze.pipeline_watermarks`;
+
+CREATE OR REPLACE TABLE `silver.returns` AS
+SELECT DISTINCT
+  TRIM(ReturnID) as return_id,
+  TRIM(OrderId) as order_id,
+  TRIM(ProductID) as product_id,
+  TRIM(Return_reason) as return_reason,
+  SAFE_CAST(ReturnDate as DATE) as return_date,
+  TRIM(ReturnStatus) as return_status,
+  RefundAmount as refund_amount,
+  REGEXP_REPLACE(TRIM(ReturnMethod), r'_', ' ') as return_method,
+  _ingested_at as igested_at,
+  TRIM(_source_file) as source_file
+
+FROM `bronze.returns`;
+
+CREATE OR REPLACE TABLE `silver.shipping_tier` AS
+SELECT DISTINCT
+  TRIM(ShippingTierID) as shipping_tier_id,
+  TRIM(TierName) as tier_name,
+  Cost_Rs as cost_rs,
+  _ingested_at as ingested_at,
+  TRIM(_source_file) as source_file
+FROM `bronze.shipping_tier`;
+
+CREATE OR REPLACE TABLE `silver.suppliers` AS
+SELECT DISTINCT
+  TRIM(SupplierID) as supplier_id,
+  TRIM(SupplierName) as supplier_name,
+  LOWER(TRIM(SupplierEmail)) as supplier_email,
+  TRIM(City) as city,
+  _ingested_at as ingested_at,
+  TRIM(_source_file) as source_file
+FROM `bronze.suppliers`;
+
+CREATE OR REPLACE TABLE `silver.products` AS
+SELECT 
+  TRIM(product_id) as product_id,
+  TRIM(product_name) as product_name,
+  actual_price_inr as actual_price_inr,
+  TRIM(category) as category,
+  TRIM(sub_category) as sub_category,
+  discounted_price_inr as discounted_price_inr,
+  SAFE_CAST(last_updated AS TIMESTAMP) as last_updated,
+  num_ratings as num_ratings,
+  rating as rating,
+  STRUCT(
+    specs.color_options,
+    TRIM(specs.country_of_origin) AS country_of_origin,
+    specs.is_returnable,
+    TRIM(specs.material) AS material,
+    TRIM(specs.power_source) AS power_source,
+    specs.return_window_days,
+    specs.warranty_months,
+    specs.weight_kg
+  ) AS specs,
+ 
+  STRUCT(
+    TRIM(supplier_info.city) AS city,
+    TRIM(supplier_info.name) AS name,
+    TRIM(supplier_info.supplier_id) AS supplier_id
+  ) AS supplier_info,
+ 
+  tags,
+  _ingested_at as ingested_at,
+  TRIM(_source_file) as source_file
+FROM `bronze.products`;
+
+UPDATE `silver.addresses`
+SET address_line_1 = TRIM(REGEXP_REPLACE(address_line_1, r'_', ' '))
+WHERE REGEXP_CONTAINS(address_line_1, r'_');

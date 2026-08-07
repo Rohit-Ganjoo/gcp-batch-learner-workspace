@@ -1,0 +1,225 @@
+CREATE OR REPLACE TABLE `gold.dim_customers` AS
+SELECT c.customer_id,c.first_name,c.last_name, 
+  CONCAT(c.first_name,' ',c.last_name) as full_name,
+  c.email,c.phone_number,c.date_of_birth,
+  DATE_DIFF(CURRENT_DATE(),date_of_birth,YEAR) AS age,
+  CASE
+      WHEN DATE_DIFF(CURRENT_DATE(),date_of_birth,YEAR)  < 25     THEN 'Under 25'
+      WHEN DATE_DIFF(CURRENT_DATE(),date_of_birth,YEAR)  BETWEEN 25 AND 35 THEN '25-35'
+      WHEN DATE_DIFF(CURRENT_DATE(),date_of_birth,YEAR)  BETWEEN 36 AND 50 THEN '36-50'
+      ELSE 'Over 50'
+  END AS age_group,
+  c.registration_date,
+  DATE_DIFF(CURRENT_DATE(),registration_date,YEAR) AS tenure_years,
+  c.preferred_payment_method_id, a.address_id,a.address_line_1,a.city,a.state,a.zip_code,a.address_type
+FROM `silver.customers` c LEFT JOIN `silver.addresses` a
+ON c.customer_id=a.customer_id;
+
+CREATE OR REPLACE TABLE `gold.dim_products` AS
+SELECT * ,
+  ROUND(((actual_price_inr-discounted_price_inr)*100.00)/actual_price_inr,2) as discount_pct,
+  CASE
+    WHEN discounted_price_inr < 1000 THEN 'Budget'
+    WHEN discounted_price_inr < 5000 THEN 'Mid-Range'
+    ELSE 'Premium'
+  END AS price_segment,
+  CASE 
+    WHEN rating>4.5 THEN 'elite'
+    WHEN rating>4.0 THEN 'excellent'
+    WHEN rating>3.5 THEN 'good'
+    WHEN rating>3.0 THEN 'average'
+    ELSE 'bad'
+  END AS rating_tier
+
+FROM `silver.products`;
+
+CREATE OR REPLACE TABLE `gold.dim_date` AS
+SELECT
+    dt AS date_key,
+
+    EXTRACT(YEAR FROM dt) AS year,
+    EXTRACT(QUARTER FROM dt) AS quarter,
+    EXTRACT(MONTH FROM dt) AS month,
+
+    FORMAT_DATE('%B', dt) AS month_name,
+    FORMAT_DATE('%A', dt) AS day_name,
+
+    CASE
+        WHEN EXTRACT(DAYOFWEEK FROM dt) IN (1, 7) THEN TRUE
+        ELSE FALSE
+    END AS is_weekend,
+
+    CONCAT(
+        CAST(EXTRACT(YEAR FROM dt) AS STRING),
+        '-Q',
+        CAST(EXTRACT(QUARTER FROM dt) AS STRING)
+    ) AS year_quarter
+
+FROM UNNEST(
+    GENERATE_DATE_ARRAY(
+        DATE '2020-01-01',
+        DATE '2030-12-31',
+        INTERVAL 1 DAY
+    )
+) AS dt;
+
+-- (dim_suppliers, dim_shipping_tiers, dim_payment_methods)
+CREATE OR REPLACE TABLE `gold.dim_suppliers`  AS 
+SELECT * FROM `silver.suppliers`;
+CREATE OR REPLACE TABLE `gold.dim_payment_methods`  AS 
+SELECT * FROM `silver.payment_methods`;
+CREATE OR REPLACE TABLE `gold.dim_shipping_tiers`  AS 
+SELECT * FROM `silver.shipping_tier`;
+
+CREATE OR REPLACE TABLE `gold.fact_order_transactions` AS
+SELECT
+    o.order_id,
+    oi.order_item_id,
+ 
+    -- Foreign Keys
+    o.customer_id,
+    oi.product_id,
+    DATE(o.order_date) AS order_date,
+    o.shipping_tier_id,
+    o.supplier_id,
+    p.payment_method_id,
+ 
+    -- Measures
+    oi.quantity,
+ 
+    pr.actual_price_inr AS unit_price,
+    pr.discounted_price_inr AS discounted_unit_price,
+ 
+    oi.quantity * pr.actual_price_inr AS line_gross_total,
+ 
+    oi.quantity * pr.discounted_price_inr AS line_discounted_total,
+ 
+    COALESCE(p.gift_card_amount, 0) AS gift_card_amount,
+    COALESCE(p.coupon_amount, 0) AS coupon_amount,
+ 
+    COALESCE(r.refund_amount, 0) AS refund_amount,
+ 
+    -- Delivery Metrics
+    TIMESTAMP_DIFF(
+        o.actual_delivery_date,
+        o.order_date,
+        HOUR
+    ) AS delivery_hours,
+ 
+    CASE
+        WHEN TIMESTAMP_DIFF(o.actual_delivery_date, o.order_date, HOUR) <= 24
+            THEN 'Same Day'
+        WHEN TIMESTAMP_DIFF(o.actual_delivery_date, o.order_date, HOUR) <= 72
+            THEN 'Fast'
+        WHEN TIMESTAMP_DIFF(o.actual_delivery_date, o.order_date, HOUR) <= 168
+            THEN 'Normal'
+        ELSE 'Delayed'
+    END AS delivery_speed_bucket,
+ 
+    -- Return Flag
+    CASE
+        WHEN r.return_id IS NOT NULL THEN TRUE
+        ELSE FALSE
+    END AS is_returned
+ 
+FROM `silver.orders` o
+ 
+LEFT JOIN `silver.order_items` oi
+    ON o.order_id = oi.order_id
+ 
+LEFT JOIN `silver.products` pr
+    ON oi.product_id = pr.product_id
+ 
+LEFT JOIN `silver.payments` p
+    ON o.order_id = p.order_id
+ 
+LEFT JOIN `silver.returns` r
+    ON o.order_id = r.order_id
+    AND oi.product_id = r.product_id;
+ -- KPI 1: Daily Sales
+ 
+CREATE OR REPLACE TABLE `gold.kpi_daily_sales` AS
+SELECT
+    f.order_date,
+    o.order_channel,
+ 
+    COUNT(DISTINCT f.order_id) AS total_orders,
+ 
+    SUM(f.line_gross_total) AS gross_revenue,
+ 
+    SUM(f.line_discounted_total) AS net_revenue,
+ 
+    SUM(f.line_gross_total - f.line_discounted_total) AS total_discount
+ 
+FROM `gold.fact_order_transactions` f
+LEFT JOIN `silver.orders` o
+    ON f.order_id = o.order_id
+ 
+GROUP BY
+    f.order_date,
+    o.order_channel;
+ 
+-- KPI 2: Customer Lifetime Value
+ 
+CREATE OR REPLACE TABLE `gold.kpi_customer_ltv` AS
+SELECT
+    dc.customer_id,
+    dc.full_name,
+    dc.age_group,
+    dc.state,
+ 
+    COUNT(DISTINCT f.order_id) AS total_orders,
+ 
+    SUM(f.line_gross_total) AS lifetime_gross_revenue,
+ 
+    SUM(f.line_discounted_total) AS lifetime_net_revenue,
+ 
+    ROUND(
+        SAFE_DIVIDE(
+            SUM(f.line_discounted_total),
+            COUNT(DISTINCT f.order_id)
+        ),
+        2
+    ) AS average_order_value
+ 
+FROM `gold.fact_order_transactions` f
+ 
+LEFT JOIN `gold.dim_customers` dc
+    ON f.customer_id = dc.customer_id
+ 
+GROUP BY
+    dc.customer_id,
+    dc.full_name,
+    dc.age_group,
+    dc.state;
+ 
+-- KPI 3: Product Performance
+ 
+CREATE OR REPLACE TABLE `gold.kpi_product_performance` AS
+SELECT
+    f.product_id,
+    dp.category,
+ 
+    SUM(f.quantity) AS total_units_sold,
+    SUM(f.line_discounted_total) AS total_revenue,
+ 
+    COUNTIF(f.is_returned) AS returned_items,
+ 
+    COUNT(*) AS total_order_lines,
+ 
+    ROUND(
+        SAFE_DIVIDE(
+            COUNTIF(f.is_returned) * 100.0,
+            COUNT(*)
+        ),
+        2
+    ) AS return_rate_pct
+ 
+FROM `gold.fact_order_transactions` f
+LEFT JOIN `gold.dim_products` dp
+    ON f.product_id = dp.product_id
+ 
+GROUP BY
+    f.product_id,
+    dp.category;
+ 
